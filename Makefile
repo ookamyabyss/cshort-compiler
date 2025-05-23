@@ -1,14 +1,37 @@
+# Compilador e flags
 CC = gcc
 CFLAGS = -Iinclude -Wall -g
 
-build/lexer: build/lexer.o build/main.o
-	$(CC) -o build/lexer build/lexer.o build/main.o
+# Pastas
+SRC_DIR = src
+BUILD_DIR = build
+INCLUDE_DIR = include
 
-build/lexer.o: src/lexer.c include/lexer.h
-	$(CC) $(CFLAGS) -c src/lexer.c -o build/lexer.o
+# Arquivos
+TARGET = $(BUILD_DIR)/lexer
+OBJS = $(BUILD_DIR)/lexer.o $(BUILD_DIR)/main.o
 
-build/main.o: src/main.c include/lexer.h
-	$(CC) $(CFLAGS) -c src/main.c -o build/main.o
+# Regra principal
+all: $(TARGET)
 
+# Garante que o executável seja criado
+$(TARGET): $(OBJS)
+	$(CC) -o $@ $^
+
+# Compila lexer.c
+$(BUILD_DIR)/lexer.o: $(SRC_DIR)/lexer.c $(INCLUDE_DIR)/lexer.h | $(BUILD_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+# Compila main.c
+$(BUILD_DIR)/main.o: $(SRC_DIR)/main.c $(INCLUDE_DIR)/lexer.h | $(BUILD_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+# Cria o diretório build/ se não existir
+$(BUILD_DIR):
+	mkdir -p $(BUILD_DIR)
+
+# Limpa os arquivos compilados
 clean:
-	rm -f build/*.o build/lexer
+	rm -rf $(BUILD_DIR)/*.o $(TARGET)
+
+.PHONY: all clean

@@ -1,36 +1,29 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include "lexer.h"
 
-int main(int argc, char *argv[]) {
-    if (argc < 2) {
-        printf("Uso: %s <arquivo>\n", argv[0]);
+int main(int argc, char* argv[]) {
+    if (argc != 2) {
+        fprintf(stderr, "Uso: %s <arquivo-fonte>\n", argv[0]);
         return 1;
     }
 
-    reinicia_lexer(argv[1]);
+    FILE* f = fopen(argv[1], "r");
+    if (!f) {
+        perror("Erro ao abrir o arquivo");
+        return 1;
+    }
 
-    TOKEN tk;
+    initLexer(f);
+
+    Token tok;
     do {
-        tk = proximo_token();
+        tok = getNextToken();
+        printf("Lexema: %-12s Tipo: %2d Linha: %3d Coluna: %3d\n",
+               tok.lexeme, tok.type, tok.line, tok.column);
+    } while (tok.type != TOKEN_EOF && tok.type != TOKEN_INVALID);
 
-        switch (tk.cat) {
-            case ID:
-                printf("Token ID: %s\n", tk.lexema);
-                break;
-            case INTCON:
-                printf("Token INT: %s\n", tk.lexema);
-                break;
-            case SN:
-                if (tk.atributo.codigo == TK_EOF) {
-                    printf("Token EOF\n");
-                } else {
-                    printf("Token SN: '%c' (%d)\n", tk.atributo.codigo, tk.atributo.codigo);
-                }
-                break;
-            default:
-                printf("Token desconhecido\n");
-        }
-    } while (tk.cat != SN || tk.atributo.codigo != TK_EOF);
-
+    fclose(f);
+    destroyLexer();
     return 0;
 }

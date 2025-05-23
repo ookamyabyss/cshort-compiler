@@ -1,25 +1,91 @@
 #ifndef LEXER_H
 #define LEXER_H
 
-#define TAM_MAX_LEXEMA 100
-#define TK_EOF -1
+#include <stdio.h>
 
-enum TOKEN_CAT {
-    ID,
-    INTCON,
-    SN
-};
+#define TAM_MAX_LEXEMA 128
 
+// Tipos de tokens reconhecidos
+typedef enum {
+    TOKEN_ID,         // Identificador
+    TOKEN_INTCON,     // Constante inteira
+    TOKEN_REALCON,    // Constante real
+    TOKEN_CHARCON,    // Constante de caractere
+    TOKEN_STRINGCON,  // Constante string
+    TOKEN_COMMENT,    // Comentário
+
+    // Operadores aritméticos
+    TOKEN_PLUS,       // +
+    TOKEN_MINUS,      // -
+    TOKEN_MUL,        // *
+    TOKEN_DIV,        // /
+
+    // Operadores relacionais e lógicos
+    TOKEN_EQ,         // ==
+    TOKEN_NEQ,        // !=
+    TOKEN_LT,         // <
+    TOKEN_GT,         // >
+    TOKEN_LEQ,        // <=
+    TOKEN_GEQ,        // >=
+    TOKEN_ASSIGN,     // =
+    TOKEN_AND,        // &&
+
+    // Delimitadores
+    TOKEN_LPAREN,     // (
+    TOKEN_RPAREN,     // )
+    TOKEN_LBRACK,     // [
+    TOKEN_RBRACK,     // ]
+    TOKEN_LBRACE,     // {
+    TOKEN_RBRACE,     // }
+    TOKEN_SEMICOLON,  // ;
+    TOKEN_COMMA,      // ,
+
+    // Palavra-chave (verificada depois)
+    TOKEN_KEYWORD,
+
+    // Outros
+    TOKEN_EOF,
+    TOKEN_INVALID
+} TokenType;
+
+// Subcategorias opcionais
+typedef enum {
+    OP_PLUS,
+    OP_MINUS,
+    OP_MUL,
+    OP_DIV,
+    OP_ASSIGN,
+    OP_EQ,
+    OP_NEQ,
+    OP_LT,
+    OP_GT,
+    OP_LEQ,
+    OP_GEQ,
+    OP_AND
+} OperatorType;
+
+// Estrutura principal de um token
 typedef struct {
-    enum TOKEN_CAT cat;
+    TokenType type;       // Tipo principal do token
+
     union {
-        int codigo;
-        char lexema[TAM_MAX_LEXEMA];
-    } atributo;
-    char lexema[TAM_MAX_LEXEMA];
-} TOKEN;
+        int intVal;       // Se TOKEN_INTCON
+        float realVal;    // Se TOKEN_REALCON
+        char charVal;     // Se TOKEN_CHARCON
+        char* strVal;     // Se TOKEN_STRINGCON ou TOKEN_ID ou palavra-chave
+    };
 
-void reinicia_lexer(const char *nome_arquivo);
-TOKEN proximo_token();
+    char lexeme[TAM_MAX_LEXEMA]; // Lexema original (útil sempre)
+    int line;           // Linha de origem
+    int column;         // Coluna inicial
+} Token;
 
-#endif
+// Variável global para controle de linha 
+extern int contLinha;
+
+// Funções do analisador léxico
+void initLexer(FILE* source);   // Inicializa com um arquivo fonte
+Token getNextToken();           // Retorna próximo token
+void destroyLexer();            // Libera recursos
+
+#endif // LEXER_H

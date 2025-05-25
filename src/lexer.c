@@ -143,19 +143,20 @@ Token getNextToken() {
 
     // Constantes de caractere (ex: 'a')
     if (lastChar == '\'') {
-        lexeme[i++] = lastChar;
         lastChar = nextChar();
-        if (lastChar == '\\') { // caractere de escape
-            lexeme[i++] = lastChar;
+        if (lastChar == '\\') {
+            lexeme[0] = lastChar;
             lastChar = nextChar();
+            lexeme[1] = lastChar;
+            lexeme[2] = '\0';
+        } else {
+            lexeme[0] = lastChar;
+            lexeme[1] = '\0';
         }
-        lexeme[i++] = lastChar;
         lastChar = nextChar();
         if (lastChar == '\'') {
-            lexeme[i++] = lastChar;
-            lexeme[i] = '\0';
             lastChar = nextChar();
-            return makeToken(TOKEN_CHARCON, lexeme + 1, line, col); // ignora aspas
+            return makeToken(TOKEN_CHARCON, lexeme, line, col);
         } else {
             return makeToken(TOKEN_INVALID, "Invalid char", line, col);
         }
@@ -163,12 +164,14 @@ Token getNextToken() {
 
     // Constantes de string (ex: "texto")
     if (lastChar == '"') {
+        lexeme[i++] = '"'; // adiciona a aspa de abertura
         lastChar = nextChar();
-        while (lastChar != '"' && lastChar != EOF && i < TAM_MAX_LEXEMA - 1) {
+        while (lastChar != '"' && lastChar != EOF && i < TAM_MAX_LEXEMA - 2) {
             lexeme[i++] = lastChar;
             lastChar = nextChar();
         }
         if (lastChar == '"') {
+            lexeme[i++] = '"'; // adiciona a aspa de fechamento
             lexeme[i] = '\0';
             lastChar = nextChar();
             return makeToken(TOKEN_STRINGCON, lexeme, line, col);

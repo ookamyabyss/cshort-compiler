@@ -1,7 +1,7 @@
 int main() {
     int x = 10;
     float y = 5.14;
-    char c = 'b';
+    char c = '\0';
     string s = "Olá, mundo!";
     
     if (x > 5 && y < 4.0) {

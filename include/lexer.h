@@ -88,4 +88,6 @@ void initLexer(FILE* source);   // Inicializa com um arquivo fonte
 Token getNextToken();           // Retorna próximo token
 void destroyLexer();            // Libera recursos
 
+const char* tokenTypeName(TokenType type);
+
 #endif // LEXER_H

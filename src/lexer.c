@@ -25,6 +25,41 @@ const char* keywords[] = {
     "int", "float", "char", "void", "string",
     "break", "continue", "do", "switch", "case", "default"
 };
+
+const char* tokenTypeName(TokenType type) {
+    switch (type) {
+        case TOKEN_ID: return "id";
+        case TOKEN_INTCON: return "intcon";
+        case TOKEN_REALCON: return "realcon";
+        case TOKEN_CHARCON: return "charcon";
+        case TOKEN_STRINGCON: return "stringcon";
+        case TOKEN_PLUS: return "+";
+        case TOKEN_MINUS: return "-";
+        case TOKEN_MUL: return "*";
+        case TOKEN_DIV: return "/";
+        case TOKEN_LT: return "<";
+        case TOKEN_LEQ: return "<=";
+        case TOKEN_GT: return ">";
+        case TOKEN_GEQ: return ">=";
+        case TOKEN_EQ: return "==";
+        case TOKEN_NEQ: return "!=";
+        case TOKEN_ASSIGN: return "=";
+        case TOKEN_AND: return "&&";
+        case TOKEN_LPAREN: return "(";
+        case TOKEN_RPAREN: return ")";
+        case TOKEN_LBRACK: return "[";
+        case TOKEN_RBRACK: return "]";
+        case TOKEN_LBRACE: return "{";
+        case TOKEN_RBRACE: return "}";
+        case TOKEN_SEMICOLON: return ";";
+        case TOKEN_COMMA: return ",";
+        case TOKEN_KEYWORD: return "palavra-chave";
+        case TOKEN_EOF: return "EOF";
+        case TOKEN_INVALID: return "inválido";
+        default: return "desconhecido";
+    }
+}
+
 const int numKeywords = 16;
 
 // ==============================

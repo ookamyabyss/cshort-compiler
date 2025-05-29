@@ -19,8 +19,7 @@ int main(int argc, char* argv[]) {
     Token tok;
     do {
         tok = getNextToken();
-        printf("Lexema: %-12s Tipo: %2d Linha: %3d Coluna: %3d\n",
-               tok.lexeme, tok.type, tok.line, tok.column);
+        printf("Lexema: %-12s Tipo: %2d (%s) Linha: %3d Coluna: %3d\n", tok.lexeme, tok.type, tokenTypeName(tok.type), tok.line, tok.column);
     } while (tok.type != TOKEN_EOF && tok.type != TOKEN_INVALID);
 
     fclose(f);

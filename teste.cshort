@@ -1,16 +1,11 @@
 int main() {
     int x = 10;
     float y = 5.14;
-    char c = '\0';
+    char c = 'b';
     string s = "Olá, mundo!";
     
     if (x > 5 && y < 4.0) {
         x = x + 1;
     }
 
-    // Comentário de linha
-    /*
-        Comentário de bloco
-    */
-    return 0;
 }

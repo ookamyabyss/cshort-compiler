@@ -11,7 +11,7 @@
 Atualiza o sistema (pode pedir para reiniciar)
 
 ```bash
-    pacman -Syu    
+    pacman -Su    
 ```
 
 Depois, instale o compilador e ferramentas:

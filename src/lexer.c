@@ -32,6 +32,8 @@ const char* tokenTypeName(TokenType type) {
         case TOKEN_INTCON: return "intcon";
         case TOKEN_REALCON: return "realcon";
         case TOKEN_CHARCON: return "charcon";
+        case TOKEN_CHARCON_N: return "charcon_n";
+        case TOKEN_CHARCON_0: return "charcon_0";
         case TOKEN_STRINGCON: return "stringcon";
         case TOKEN_PLUS: return "+";
         case TOKEN_MINUS: return "-";
@@ -176,24 +178,45 @@ Token getNextToken() {
         return makeToken(isReal ? TOKEN_REALCON : TOKEN_INTCON, lexeme, line, col);
     }
 
-    // Constantes de caractere (ex: 'a')
+    // Constantes de caractere (ex: 'a', '\n', '\0')
     if (lastChar == '\'') {
+        int startCol = col; // salva coluna para diagnóstico se der erro
+        lexeme[0] = '\''; // abre aspas
+
         lastChar = nextChar();
+
+        TokenType charTokenType;
+
         if (lastChar == '\\') {
-            lexeme[0] = lastChar;
-            lastChar = nextChar();
+            char escapedChar = nextChar();
+            lexeme[1] = '\\';
+            lexeme[2] = escapedChar;
+            lexeme[3] = '\'';  // fecha aspas
+            lexeme[4] = '\0';
+
+            if (escapedChar == 'n') {
+                charTokenType = TOKEN_CHARCON_N;
+            } else if (escapedChar == '0') {
+                charTokenType = TOKEN_CHARCON_0;
+            } else {
+                charTokenType = TOKEN_CHARCON; // outros escapes como \t, \r, etc.
+            }
+
+            lastChar = nextChar(); // consome a aspa final
+        } else {
             lexeme[1] = lastChar;
-            lexeme[2] = '\0';
-        } else {
-            lexeme[0] = lastChar;
-            lexeme[1] = '\0';
+            lexeme[2] = '\'';
+            lexeme[3] = '\0';
+
+            charTokenType = TOKEN_CHARCON;
+            lastChar = nextChar(); // consome a aspa final
         }
-        lastChar = nextChar();
+
         if (lastChar == '\'') {
-            lastChar = nextChar();
-            return makeToken(TOKEN_CHARCON, lexeme, line, col);
+            lastChar = nextChar(); // consome o próximo caractere após a aspa
+            return makeToken(charTokenType, lexeme, line, startCol);
         } else {
-            return makeToken(TOKEN_INVALID, "Invalid char", line, col);
+            return makeToken(TOKEN_INVALID, "Invalid char", line, startCol);
         }
     }
 

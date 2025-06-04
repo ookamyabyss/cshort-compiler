@@ -32,6 +32,6 @@ $(BUILD_DIR):
 
 # Limpa os arquivos compilados
 clean:
-	rm -rf $(BUILD_DIR)/*.o $(TARGET)
+	rm -f $(BUILD_DIR)/*.o $(TARGET)
 
 .PHONY: all clean

@@ -7,12 +7,14 @@
 
 // Tipos de tokens reconhecidos
 typedef enum {
-    TOKEN_ID,         // Identificador
-    TOKEN_INTCON,     // Constante inteira
-    TOKEN_REALCON,    // Constante real
-    TOKEN_CHARCON,    // Constante de caractere
-    TOKEN_STRINGCON,  // Constante string
-    TOKEN_COMMENT,    // Comentário
+    TOKEN_ID,          // Identificador
+    TOKEN_INTCON,      // Constante inteira
+    TOKEN_REALCON,     // Constante real
+    TOKEN_CHARCON,     // Constante de caractere comum ex: 'a'
+    TOKEN_CHARCON_N,   // Constante de caractere '\n'
+    TOKEN_CHARCON_0,   // Constante de caractere '\0'
+    TOKEN_STRINGCON,   // Constante string
+    TOKEN_COMMENT,     // Comentário
 
     // Operadores aritméticos
     TOKEN_PLUS,       // +

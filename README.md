@@ -34,7 +34,8 @@ make
 ```
 
 ```bash
-build/lexer.exe
+./build/lexer 'nome do arq'
+
 ```
 
 ![Cshort](./assets/cshort_afd.png)

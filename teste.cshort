@@ -1,11 +1,4 @@
+int x;
 int main() {
-    int x = 10;
-    float y = 5.14;
-    char c = 'b';
-    string s = "Olá, mundo!";
-    
-    if (x > 5 && y < 4.0) {
-        x = x + 1;
-    }
-
+    return 0;
 }

@@ -160,8 +160,23 @@ Token getNextToken() {
             lastChar = nextChar();
         }
         lexeme[i] = '\0';
-        if (isKeyword(lexeme))
-            return makeToken(TOKEN_KEYWORD, lexeme, line, col);
+        if (strcmp(lexeme, "int") == 0)       return makeToken(TOKEN_KEYWORD_INT, lexeme, line, col);
+        else if (strcmp(lexeme, "char") == 0) return makeToken(TOKEN_KEYWORD_CHAR, lexeme, line, col);
+        else if (strcmp(lexeme, "float") == 0) return makeToken(TOKEN_KEYWORD_FLOAT, lexeme, line, col);
+        else if (strcmp(lexeme, "if") == 0)   return makeToken(TOKEN_KEYWORD_IF, lexeme, line, col);
+        else if (strcmp(lexeme, "else") == 0) return makeToken(TOKEN_KEYWORD_ELSE, lexeme, line, col);
+        else if (strcmp(lexeme, "while") == 0) return makeToken(TOKEN_KEYWORD_WHILE, lexeme, line, col);
+        else if (strcmp(lexeme, "for") == 0)  return makeToken(TOKEN_KEYWORD_FOR, lexeme, line, col);
+        else if (strcmp(lexeme, "return") == 0) return makeToken(TOKEN_KEYWORD_RETURN, lexeme, line, col);
+        else if (strcmp(lexeme, "void") == 0) return makeToken(TOKEN_KEYWORD_VOID, lexeme, line, col);
+        else if (strcmp(lexeme, "break") == 0) return makeToken(TOKEN_KEYWORD_BREAK, lexeme, line, col);
+        else if (strcmp(lexeme, "continue") == 0) return makeToken(TOKEN_KEYWORD_CONTINUE, lexeme, line, col);
+        else if (strcmp(lexeme, "do") == 0) return makeToken(TOKEN_KEYWORD_DO, lexeme, line, col);
+        else if (strcmp(lexeme, "switch") == 0) return makeToken(TOKEN_KEYWORD_SWITCH, lexeme, line, col);
+        else if (strcmp(lexeme, "case") == 0) return makeToken(TOKEN_KEYWORD_CASE, lexeme, line, col);
+        else if (strcmp(lexeme, "default") == 0) return makeToken(TOKEN_KEYWORD_DEFAULT, lexeme, line, col);
+        else if (strcmp(lexeme, "string") == 0) return makeToken(TOKEN_KEYWORD_STRING, lexeme, line, col);
+        else return makeToken(TOKEN_ID, lexeme, line, col);
         return makeToken(TOKEN_ID, lexeme, line, col);
     }
 

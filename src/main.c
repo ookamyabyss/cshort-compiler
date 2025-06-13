@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "lexer.h"
+#include "parser.h"  // <-- Inclui o parser
 
 int main(int argc, char* argv[]) {
     if (argc != 2) {
@@ -14,15 +15,9 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    initLexer(f);
-
-    Token tok;
-    do {
-        tok = getNextToken();
-        printf("Lexema: %-12s Tipo: %2d (%s) Linha: %3d Coluna: %3d\n", tok.lexeme, tok.type, tokenTypeName(tok.type), tok.line, tok.column);
-    } while (tok.type != TOKEN_EOF && tok.type != TOKEN_INVALID);
+    // Aqui antes era só o analisador léxico. Agora chamamos o parser completo:
+    startParser(f);
 
     fclose(f);
-    destroyLexer();
     return 0;
 }

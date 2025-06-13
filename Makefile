@@ -8,13 +8,13 @@ BUILD_DIR = build
 INCLUDE_DIR = include
 
 # Arquivos
-TARGET = $(BUILD_DIR)/lexer
-OBJS = $(BUILD_DIR)/lexer.o $(BUILD_DIR)/main.o
+TARGET = $(BUILD_DIR)/cshort
+OBJS = $(BUILD_DIR)/lexer.o $(BUILD_DIR)/parser.o $(BUILD_DIR)/main.o
 
 # Regra principal
 all: $(TARGET)
 
-# Garante que o executável seja criado
+# Cria o executável
 $(TARGET): $(OBJS)
 	$(CC) -o $@ $^
 
@@ -22,8 +22,12 @@ $(TARGET): $(OBJS)
 $(BUILD_DIR)/lexer.o: $(SRC_DIR)/lexer.c $(INCLUDE_DIR)/lexer.h | $(BUILD_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
+# Compila parser.c
+$(BUILD_DIR)/parser.o: $(SRC_DIR)/parser.c $(INCLUDE_DIR)/parser.h $(INCLUDE_DIR)/lexer.h | $(BUILD_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
 # Compila main.c
-$(BUILD_DIR)/main.o: $(SRC_DIR)/main.c $(INCLUDE_DIR)/lexer.h | $(BUILD_DIR)
+$(BUILD_DIR)/main.o: $(SRC_DIR)/main.c $(INCLUDE_DIR)/lexer.h $(INCLUDE_DIR)/parser.h | $(BUILD_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 # Cria o diretório build/ se não existir

@@ -8,18 +8,29 @@
 void startParser(FILE* f);
 
 // Função principal que inicia a análise sintática (ponto de entrada: prog)
+
+// prog ::= { decl ';' | func }
 void parseProg();
 
+// decl ::= tipo decl_var { ',' decl_var} 
+//      | tipo id '(' tipos_param')' { ',' id '(' tipos_param')' } 
+//      | void id '(' tipos_param')' { ',' id '(' tipos_param')' }
 void parseDecl();
-void parseTipo();
+
+// decl_var ::= id [ '[' intcon ']' ]
 void parseDeclVar();
-void parseDeclVarResto();
+
+void parseTipo();
+
 void parseTiposParam();
 void parseTipoParamVar();
 int isTipo(TokenType t);  
 void parseFunc();
 void parseCmd();
 void parseParam();
+void parseDeclVarResto();
+
+void parseDeclVarPrimeiro();
 
 
 #endif // PARSER_H

@@ -1,8 +1,11 @@
-
 int x;
 float y, z;
-char nome[50];
+char w[5], q[10];
 
 int soma(int a, int b);
-void imprime(void);
-bool maior(int x, int y);
+
+void imprime();
+
+float media(int valores[], int n), max(int a, int b);
+
+int main(void) {}

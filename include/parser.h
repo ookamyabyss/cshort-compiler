@@ -20,9 +20,13 @@ void parseDecl();
 // decl_var ::= id [ '[' intcon ']' ]
 void parseDeclVar();
 
+// tipo ::= char | int | float | bool
 void parseTipo();
 
+//tipos_param ::= void 
+//              | tipo (id | &&id | id '[' ']') { ','  tipo (id | &&id | id '[' ']') }
 void parseTiposParam();
+
 void parseTipoParamVar();
 int isTipo(TokenType t);  
 void parseFunc();
@@ -32,5 +36,5 @@ void parseDeclVarResto();
 
 void parseDeclVarPrimeiro();
 
-
+void parseTipoParam();
 #endif // PARSER_H

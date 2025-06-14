@@ -1,11 +1,16 @@
-int x;
-float y, z;
-char w[5], q[10];
+int a;
+float b[10], c;
 
-int soma(int a, int b);
+int soma(int x, int y);
+void imprime(void);
+float media(int &&valores[], int tamanho);
 
-void imprime();
+void f(int a, float &&b, char c[]) {
+    int i;
+    i = 0;
+}
 
-float media(int valores[], int n), max(int a, int b);
-
-int main(void) {}
+int g(char &&letra, float vet[]) {
+    float resultado;
+    resultado = 0.0;
+}

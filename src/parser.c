@@ -122,6 +122,7 @@ void parseDecl() {
 
         expect(TOKEN_ID);
         printf("[DECL_FUNCAO_VOID] Função void reconhecida: %s\n", nomeFunc);
+        
         expect(TOKEN_LPAREN);
         parseTiposParam();
         expect(TOKEN_RPAREN);
@@ -169,6 +170,7 @@ void parseDeclVar() {
     }
 }
 
+// tipo ::= char | int | float | bool
 void parseTipo() {
     if (isTipo(currentToken.type)) {
         advance();
@@ -177,25 +179,28 @@ void parseTipo() {
     }
 }
 
+//tipos_param ::= void 
+//              | tipo (id | &&id | id '[' ']') { ','  tipo (id | &&id | id '[' ']') }
 void parseTiposParam() {
-    // Lista vazia de parâmetros (ex: função com parênteses vazios)
     if (currentToken.type == TOKEN_RPAREN) {
-        return; // lista vazia
+        return;
     }
 
     if (currentToken.type == TOKEN_KEYWORD_VOID) {
         advance();
+
+        if (currentToken.type != TOKEN_RPAREN) {
+            erro("Token 'void' não pode ser seguido por outros parâmetros");
+        }
+
         return;
     }
 
-    parseTipo();
-
-    parseParam();
+    parseTipoParam();  // consome tipo e param juntos
 
     while (currentToken.type == TOKEN_COMMA) {
         advance();
-        parseTipo();
-        parseParam();
+        parseTipoParam();  // aqui estava o erro
     }
 }
 
@@ -223,21 +228,6 @@ int isTipo(TokenType t) {
            t == TOKEN_KEYWORD_BOOL;
 }
 
-void parseParam() {
-    if (currentToken.type == TOKEN_AMPERSAND) {
-        advance();
-        expect(TOKEN_ID);
-    } else if (currentToken.type == TOKEN_ID) {
-        advance();
-        if (currentToken.type == TOKEN_LBRACK) {
-            advance();
-            expect(TOKEN_RBRACK);
-        }
-    } else {
-        erro("Esperado identificador, &identificador ou identificador[] no parâmetro");
-    }
-}
-
 void parseDeclVarPrimeiro() {
     // Aqui o id já foi consumido no parseDecl
     printf("[DECL_VAR] Reconhecida variável (primeira)\n");
@@ -257,3 +247,47 @@ void parseDeclVarResto() {
         parseDeclVarPrimeiro();
     }
 }
+
+void parseTipoParam() {
+    if (!isTipo(currentToken.type)) {
+        erro("Esperado tipo (int, char, float, bool) no parâmetro");
+    }
+
+    advance(); // consome o tipo
+
+    // Verifica se é '&&' (um único token do tipo TOKEN_AND)
+    int porReferencia = 0;
+    if (currentToken.type == TOKEN_AND) {
+        porReferencia = 1;
+        advance(); // consome '&&'
+    }
+
+    // Agora deve vir um identificador
+    if (currentToken.type != TOKEN_ID) {
+        erro("Esperado identificador no parâmetro");
+    }
+
+    char nome[256];
+    strncpy(nome, currentToken.lexeme, sizeof(nome));
+    nome[sizeof(nome) - 1] = '\0';
+    advance(); // consome ID
+
+    // Verifica se é vetor
+    int isVetor = 0;
+    if (currentToken.type == TOKEN_LBRACK) {
+        advance();
+        expect(TOKEN_RBRACK);
+        isVetor = 1;
+    }
+
+    // Imprime o tipo de parâmetro detectado
+    if (porReferencia) {
+        printf("[PARAM] Parâmetro por referência: &&%s\n", nome);
+    } else if (isVetor) {
+        printf("[PARAM] Parâmetro vetor: %s[]\n", nome);
+    } else {
+        printf("[PARAM] Parâmetro comum: %s\n", nome);
+    }
+}
+
+

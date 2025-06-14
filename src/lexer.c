@@ -162,6 +162,7 @@ Token getNextToken() {
         lexeme[i] = '\0';
         if (strcmp(lexeme, "int") == 0)       return makeToken(TOKEN_KEYWORD_INT, lexeme, line, col);
         else if (strcmp(lexeme, "char") == 0) return makeToken(TOKEN_KEYWORD_CHAR, lexeme, line, col);
+        else if (strcmp(lexeme, "bool") == 0) return makeToken(TOKEN_KEYWORD_BOOL, lexeme, line, col);
         else if (strcmp(lexeme, "float") == 0) return makeToken(TOKEN_KEYWORD_FLOAT, lexeme, line, col);
         else if (strcmp(lexeme, "if") == 0)   return makeToken(TOKEN_KEYWORD_IF, lexeme, line, col);
         else if (strcmp(lexeme, "else") == 0) return makeToken(TOKEN_KEYWORD_ELSE, lexeme, line, col);

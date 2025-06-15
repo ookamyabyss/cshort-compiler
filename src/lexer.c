@@ -47,6 +47,7 @@ const char* tokenTypeName(TokenType type) {
         case TOKEN_NEQ: return "!=";
         case TOKEN_ASSIGN: return "=";
         case TOKEN_AND: return "&&";
+        case TOKEN_OR: return "||";
         case TOKEN_LPAREN: return "(";
         case TOKEN_RPAREN: return ")";
         case TOKEN_LBRACK: return "[";
@@ -319,6 +320,13 @@ Token getNextToken() {
                 return makeToken(TOKEN_AND, "&&", line, col);
             }
             return makeToken(TOKEN_INVALID, "&", line, col);
+        case '|':
+            lastChar = nextChar();
+            if (lastChar == '|') {
+                lastChar = nextChar();
+                return makeToken(TOKEN_OR, "||", line, col);
+            }
+            return makeToken(TOKEN_INVALID, "|", line, col);
         case '(': lastChar = nextChar(); return makeToken(TOKEN_LPAREN, "(", line, col);
         case ')': lastChar = nextChar(); return makeToken(TOKEN_RPAREN, ")", line, col);
         case '[': lastChar = nextChar(); return makeToken(TOKEN_LBRACK, "[", line, col);

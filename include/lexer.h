@@ -31,6 +31,7 @@ typedef enum {
     TOKEN_GEQ,        // >=
     TOKEN_ASSIGN,     // =
     TOKEN_AND,        // &&
+    TOKEN_OR,        // ||
 
     // Delimitadores
     TOKEN_LPAREN,     // (

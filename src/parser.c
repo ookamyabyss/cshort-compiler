@@ -204,22 +204,45 @@ void parseTiposParam() {
     }
 }
 
+//func ::= tipo id '(' tipos_param')' '{' { tipo decl_var{ ',' decl_var} ';' } { cmd } 
+//     '}' 
+//     | void id '(' tipos_param')' '{' { tipo decl_var{ ',' decl_var} ';' } { cmd 
+//     } '}'
 void parseFunc() {
-    // Pula o corpo da função por enquanto
-    if (currentToken.type == TOKEN_LBRACE) {
-        int abre = 1;
-        advance();
-        while (abre > 0 && currentToken.type != TOKEN_EOF) {
-            if (currentToken.type == TOKEN_LBRACE) abre++;
-            else if (currentToken.type == TOKEN_RBRACE) abre--;
-            advance();
-        }
-        if (abre != 0)
-            erro("Bloco da função não fechado");
-    } else {
-        erro("Esperado '{' no início da função");
+    // { tipo decl_var { ',' decl_var } ';' }
+    while (isTipo(currentToken.type)) {
+        TokenType tipoAtual = currentToken.type;  // Salva o tipo atual antes de consumir
+        parseTipo();                              // Consome o tipo (ex: int)
+        printf("[LOCAL] Declaração local iniciada: %s\n", tokenTypeName(tipoAtual));  // Usa o tipo salvo
+        parseDeclVarPrimeiro();  // espera que o ID venha logo depois
+        parseDeclVarResto();
+        expect(TOKEN_SEMICOLON);
     }
+
+    // { cmd }
+    while (currentToken.type != TOKEN_RBRACE && currentToken.type != TOKEN_EOF) {
+        parseCmd();
+    }
+
+    expect(TOKEN_RBRACE);
 }
+
+
+// cmd ::= if '(' expr ')' cmd [ else cmd ] 
+//     | while '(' expr ')' cmd 
+//     | for '(' [ atrib ] ';' [ expr ] ';' [ atrib ] ')' cmd 
+//     | return [ expr ] ';' 
+//     | atrib ';' 
+//     | id '(' [expr { ',' expr } ] ')' ';' 
+//     | '{' { cmd } '}' 
+//     | ';' 
+void parseCmd() {
+    printf("[CMD] Comando (placeholder) reconhecido: token '%s'\n", currentToken.lexeme);
+    advance(); // Apenas consome o token como placeholder
+}
+
+// parseExpr() (temporário)
+
 
 int isTipo(TokenType t) {
     return t == TOKEN_KEYWORD_INT ||
@@ -288,6 +311,12 @@ void parseTipoParam() {
     } else {
         printf("[PARAM] Parâmetro comum: %s\n", nome);
     }
+}
+
+int isComandoInicio(TokenType t) {
+    return t == TOKEN_KEYWORD_IF || t == TOKEN_KEYWORD_WHILE ||
+           t == TOKEN_KEYWORD_RETURN || t == TOKEN_LBRACE ||
+           t == TOKEN_ID || t == TOKEN_SEMICOLON;
 }
 
 

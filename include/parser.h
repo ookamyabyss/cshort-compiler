@@ -37,4 +37,10 @@ void parseDeclVarResto();
 void parseDeclVarPrimeiro();
 
 void parseTipoParam();
+
+int isComandoInicio(TokenType t);
+
+void parseExpr();
+void parseAtrib();
+
 #endif // PARSER_H

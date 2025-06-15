@@ -38,7 +38,7 @@ void startParser(FILE* f) {
     destroyLexer();
 }
 
-// prog ::= { decl ';' | func }
+// prog ::= { decl ';' | func } OK
 void parseProg() {
     while (currentToken.type != TOKEN_EOF) {
         if (isTipo(currentToken.type)) {
@@ -53,7 +53,7 @@ void parseProg() {
     }
 }
 
-// decl ::= tipo decl_var { ',' decl_var} 
+// decl ::= tipo decl_var { ',' decl_var}  OK
 //      | tipo id '(' tipos_param')' { ',' id '(' tipos_param')' } 
 //      | void id '(' tipos_param')' { ',' id '(' tipos_param')' }
 void parseDecl() {
@@ -149,7 +149,7 @@ void parseDecl() {
     }
 }
 
-// decl_var ::= id [ '[' intcon ']' ]
+// decl_var ::= id [ '[' intcon ']' ] OK
 void parseDeclVar() {
     char id_lexeme[256];
     strncpy(id_lexeme, currentToken.lexeme, sizeof(id_lexeme));
@@ -170,7 +170,7 @@ void parseDeclVar() {
     }
 }
 
-// tipo ::= char | int | float | bool
+// tipo ::= char | int | float | bool OK
 void parseTipo() {
     if (isTipo(currentToken.type)) {
         advance();
@@ -179,7 +179,7 @@ void parseTipo() {
     }
 }
 
-//tipos_param ::= void 
+//tipos_param ::= void OK
 //              | tipo (id | &&id | id '[' ']') { ','  tipo (id | &&id | id '[' ']') }
 void parseTiposParam() {
     if (currentToken.type == TOKEN_RPAREN) {
@@ -240,8 +240,6 @@ void parseCmd() {
     printf("[CMD] Comando (placeholder) reconhecido: token '%s'\n", currentToken.lexeme);
     advance(); // Apenas consome o token como placeholder
 }
-
-// parseExpr() (temporário)
 
 
 int isTipo(TokenType t) {

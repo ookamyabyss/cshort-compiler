@@ -1,9 +1,22 @@
 int soma(int x, int y) {
     int resultado;
     resultado = x + y;
+    return resultado;
 }
 
-void imprime() {
-    char c;
-    c = 'A';
+void imprime(char nome[], int tamanho) {
+    int i;
+    for (i = 0; i < tamanho; i++) {
+
+    }
+}
+
+float media(int &&a, float b[]) {
+    float soma;
+    int i;
+    soma = 0;
+    for (i = 0; i < 10; i++) {
+        soma = soma + b[i];
+    }
+    return soma / 10.0;
 }

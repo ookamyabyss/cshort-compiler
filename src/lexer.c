@@ -65,6 +65,7 @@ const char* tokenTypeName(TokenType type) {
 
 const int numKeywords = 16;
 
+
 // ==============================
 // FUNÇÕES AUXILIARES
 // ==============================

@@ -7,9 +7,23 @@
 // Token atual (lookahead)
 static Token currentToken;
 
+// Buffer para um token devolvido
+Token pushedToken;
+int hasPushedToken = 0;
+
 // Avança para o próximo token
-static void advance() {
-    currentToken = getNextToken();
+void advance() {
+    if (hasPushedToken) {
+        currentToken = pushedToken;
+        hasPushedToken = 0;
+    } else {
+        currentToken = getNextToken();
+    }
+}
+
+void pushBackToken(Token t) {
+    pushedToken = t;
+    hasPushedToken = 1;
 }
 
 static void erro(const char* msg) {
@@ -236,38 +250,107 @@ void parseCmd() {
         printf("[CMD] Reconhecido comando 'if'\n");
         advance(); // consome 'if'
 
-        match(TOKEN_LPAREN);     // consome '('
-        parseExpr();             // processa expr
-        match(TOKEN_RPAREN);     // consome ')'
+        match(TOKEN_LPAREN);
+        parseExpr();
+        match(TOKEN_RPAREN);
 
-        parseCmd();              // comando após o if
+        parseCmd();
 
         if (currentToken.type == TOKEN_KEYWORD_ELSE) {
             printf("[CMD] Reconhecido bloco 'else'\n");
-            advance();           // consome 'else'
-            parseCmd();          // comando após o else
+            advance(); // consome 'else'
+            parseCmd();
         }
+
+    } else if (currentToken.type == TOKEN_KEYWORD_WHILE) {
+        printf("[CMD] Reconhecido comando 'while'\n");
+        advance(); // consome 'while'
+
+        match(TOKEN_LPAREN);
+        parseExpr();
+        match(TOKEN_RPAREN);
+
+        parseCmd();
+
+    } else if (currentToken.type == TOKEN_KEYWORD_FOR) {
+        printf("[CMD] Reconhecido comando 'for'\n");
+        advance(); // consome 'for'
+
+        match(TOKEN_LPAREN);
+
+        // [ atrib ]
+        if (currentToken.type == TOKEN_ID) {
+            parseAtrib();
+        }
+        match(TOKEN_SEMICOLON);
+
+        // [ expr ]
+        if (currentToken.type != TOKEN_SEMICOLON) {
+            parseExpr();
+        }
+        match(TOKEN_SEMICOLON);
+
+        // [ atrib ]
+        if (currentToken.type == TOKEN_ID) {
+            parseAtrib();
+        }
+        match(TOKEN_RPAREN);
+
+        parseCmd();
+
+    } else if (currentToken.type == TOKEN_KEYWORD_RETURN) {
+        printf("[CMD] Reconhecido comando 'return'\n");
+        advance(); // consome 'return'
+
+        // [ expr ]
+        if (currentToken.type != TOKEN_SEMICOLON) {
+            parseExpr();
+        }
+
+        match(TOKEN_SEMICOLON);
 
     } else if (currentToken.type == TOKEN_LBRACE) {
         printf("[CMD] Bloco composto reconhecido\n");
         advance(); // consome '{'
+
         while (currentToken.type != TOKEN_RBRACE && currentToken.type != TOKEN_EOF) {
-            parseCmd(); // chama parseCmd para cada comando dentro do bloco
+            parseCmd();
         }
-        match(TOKEN_RBRACE); // consome '}'
+        match(TOKEN_RBRACE);
 
     } else if (currentToken.type == TOKEN_SEMICOLON) {
         printf("[CMD] Comando vazio reconhecido\n");
         advance(); // consome ';'
-
     } else {
-        // Outros comandos ainda não tratados como while, for, return, atribuição, chamada de função, etc.
+        // Placeholder para comandos ainda não tratados
         printf("[CMD] Comando (placeholder) reconhecido: token '%s'\n", currentToken.lexeme);
         advance();
     }
 }
 
 // atrib ::= id [ '[' expr ']' ] = expr 
+void parseAtrib() {
+    if (currentToken.type != TOKEN_ID) {
+        syntaxError("Esperado identificador no início da atribuição");
+        return;
+    }
+
+    printf("[ATRIB] Início de atribuição: %s\n", currentToken.lexeme);
+    advance();  // consome o id
+
+    // Verifica se é uma atribuição em vetor
+    if (currentToken.type == TOKEN_LBRACK) {
+        printf("[ATRIB] Índice de vetor detectado\n");
+        advance();  // consome '['
+        parseExpr();
+        match(TOKEN_RBRACK);  // consome ']'
+    }
+
+    match(TOKEN_ASSIGN);  // consome '='
+    parseExpr();          // processa o lado direito da atribuição
+
+    printf("[ATRIB] Atribuição completa reconhecida\n");
+}
 
 // expr ::= expr_simp [ op_rel  expr_simp ] 
 void parseExpr() {
@@ -279,16 +362,6 @@ void parseExpr() {
         parseExprSimp();
     }
     printf("[EXPR] Expressão reconhecida (expr)\n");
-}
-
-void match(int expectedType) {
-    if (currentToken.type == expectedType) {
-        advance();
-    } else {
-        fprintf(stderr, "[ERRO SINTÁTICO] Esperado token do tipo %d, mas encontrado '%s' (linha %d, coluna %d)\n",
-                expectedType, currentToken.lexeme, currentToken.line, currentToken.column);
-        exit(EXIT_FAILURE); // encerra o programa, mas você pode adaptar para recuperação de erro
-    }
 }
 
 // expr_simp ::= [+ | – ] termo {(+ | – | ||) termo} 
@@ -308,7 +381,6 @@ void parseExprSimp() {
 
     printf("[EXPR] Expressão reconhecida (expr_simp)\n");
 }
-
 
 // termo ::= fator {(* | / | &&)  fator} 
 void parseTermo() {
@@ -372,6 +444,17 @@ void parseFator() {
     }
 }
 
+
+
+
+// op_rel ::= ==  
+//        |!= 
+//        |<= 
+//        |< 
+//        |>= 
+//        |> 
+
+
 void eat(int expectedTokenType) {
     if (currentToken.type == expectedTokenType) {
         advance();
@@ -385,18 +468,6 @@ void syntaxError(const char* msg) {
             msg, currentToken.lexeme, currentToken.line, currentToken.column);
     exit(EXIT_FAILURE);
 }
-
-
-
-// op_rel ::= ==  
-//        |!= 
-//        |<= 
-//        |< 
-//        |>= 
-//        |> 
-
-
-
 
 int isTipo(TokenType t) {
     return t == TOKEN_KEYWORD_INT ||
@@ -473,4 +544,12 @@ int isComandoInicio(TokenType t) {
            t == TOKEN_ID || t == TOKEN_SEMICOLON;
 }
 
-
+void match(int expectedType) {
+    if (currentToken.type == expectedType) {
+        advance();
+    } else {
+        fprintf(stderr, "[ERRO SINTÁTICO] Esperado token do tipo %d, mas encontrado '%s' (linha %d, coluna %d)\n",
+                expectedType, currentToken.lexeme, currentToken.line, currentToken.column);
+        exit(EXIT_FAILURE); // encerra o programa, mas você pode adaptar para recuperação de erro
+    }
+}

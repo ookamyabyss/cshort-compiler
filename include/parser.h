@@ -72,7 +72,10 @@ int isComandoInicio(TokenType t);
 void eat(int expectedTokenType);
 void syntaxError(const char* msg);
 
-
 void match(int expectedType);
+
+void parseAtribComIDJaLido();
+
+void ungetToken(Token tok);
 
 #endif // PARSER_H

@@ -78,4 +78,5 @@ void parseAtribComIDJaLido();
 
 void ungetToken(Token tok);
 
+void parseLocalDecl();
 #endif // PARSER_H

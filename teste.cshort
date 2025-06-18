@@ -1,26 +1,7 @@
-int main() {
-    int x, y, z;
-    char c;
-
-    x;
-
-    42;
-
-    3.14;
-
-    'a';
-    '\n';
-    '\0';
-
-    x[5];
-
-    (x + y);
-
-    !x;
-    !(x < y);
-
-    soma(1, 2, 3);
-    vazio();
-
-    return 0;
+int calcula(int val, float &&peso, bool flags[]) {
+    int x, y;
+    float resultado;
+    x = val + 1;
+    y = x * 2;
+    resultado = soma(x, y) + peso[0];
 }

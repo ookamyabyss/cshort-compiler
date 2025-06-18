@@ -3,6 +3,7 @@
 #include <string.h>
 #include "parser.h"
 #include "lexer.h"
+#include <stdbool.h>
 
 // Token atual (lookahead)
 static Token currentToken;
@@ -11,15 +12,20 @@ static Token currentToken;
 Token pushedToken;
 int hasPushedToken = 0;
 
+bool tokenBack = false;
+Token backupToken;
+
 // Avança para o próximo token
 void advance() {
-    if (hasPushedToken) {
-        currentToken = pushedToken;
-        hasPushedToken = 0;
+    if (tokenBack) {
+        tokenBack = false;
+        // Usa o backupToken em vez de pegar novo token
+        currentToken = backupToken;
     } else {
         currentToken = getNextToken();
     }
 }
+
 
 void pushBackToken(Token t) {
     pushedToken = t;
@@ -52,7 +58,7 @@ void startParser(FILE* f) {
     destroyLexer();
 }
 
-// OK prog ::= { decl ';' | func } 
+// prog ::= { decl ';' | func } 
 void parseProg() {
     while (currentToken.type != TOKEN_EOF) {
         if (isTipo(currentToken.type)) {
@@ -67,7 +73,7 @@ void parseProg() {
     }
 }
 
-// OK decl ::= tipo decl_var { ',' decl_var}  OK
+// decl ::= tipo decl_var { ',' decl_var}  
 //      | tipo id '(' tipos_param')' { ',' id '(' tipos_param')' } 
 //      | void id '(' tipos_param')' { ',' id '(' tipos_param')' }
 void parseDecl() {
@@ -163,7 +169,7 @@ void parseDecl() {
     }
 }
 
-// OK decl_var ::= id [ '[' intcon ']' ] OK
+// decl_var ::= id [ '[' intcon ']' ] 
 void parseDeclVar() {
     char id_lexeme[256];
     strncpy(id_lexeme, currentToken.lexeme, sizeof(id_lexeme));
@@ -184,7 +190,7 @@ void parseDeclVar() {
     }
 }
 
-// OK tipo ::= char | int | float | bool OK
+// tipo ::= char | int | float | bool 
 void parseTipo() {
     if (isTipo(currentToken.type)) {
         advance();
@@ -193,7 +199,7 @@ void parseTipo() {
     }
 }
 
-// OK tipos_param ::= void OK
+// tipos_param ::= void 
 //              | tipo (id | &&id | id '[' ']') { ','  tipo (id | &&id | id '[' ']') }
 void parseTiposParam() {
     if (currentToken.type == TOKEN_RPAREN) {
@@ -218,7 +224,7 @@ void parseTiposParam() {
     }
 }
 
-// OK func ::= tipo id '(' tipos_param')' '{' { tipo decl_var{ ',' decl_var} ';' } { cmd } 
+// func ::= tipo id '(' tipos_param')' '{' { tipo decl_var{ ',' decl_var} ';' } { cmd } 
 //     '}' 
 //     | void id '(' tipos_param')' '{' { tipo decl_var{ ',' decl_var} ';' } { cmd 
 //     } '}'
@@ -552,4 +558,9 @@ void match(int expectedType) {
                 expectedType, currentToken.lexeme, currentToken.line, currentToken.column);
         exit(EXIT_FAILURE); // encerra o programa, mas você pode adaptar para recuperação de erro
     }
+}
+
+void ungetToken(Token tok) {
+    tokenBack = true;
+    backupToken = tok;
 }

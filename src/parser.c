@@ -59,7 +59,6 @@ void startParser(FILE* f) {
 
 // prog ::= { decl ';' | func } 
 void parseProg() {
-    printf(">> Entrando parseProg\n");
     while (currentToken.type != TOKEN_EOF) {
         if (isTipo(currentToken.type)) {
             // Pode ser declaração ou função
@@ -77,7 +76,6 @@ void parseProg() {
 //      | tipo id '(' tipos_param')' { ',' id '(' tipos_param')' } 
 //      | void id '(' tipos_param')' { ',' id '(' tipos_param')' }
 void parseDecl() {
-    printf(">> Entrando parseDecl\n");
     if (isTipo(currentToken.type)) {
         parseTipo();
 
@@ -181,7 +179,6 @@ void parseDecl() {
 
 // decl_var ::= id [ '[' intcon ']' ] 
 void parseDeclVar() {
-    printf(">> Entrando parseDeclVar\n");
     char id_lexeme[256];
     strncpy(id_lexeme, currentToken.lexeme, sizeof(id_lexeme));
     id_lexeme[sizeof(id_lexeme) - 1] = '\0';
@@ -240,38 +237,21 @@ void parseTiposParam() {
 //     | void id '(' tipos_param')' '{' { tipo decl_var{ ',' decl_var} ';' } { cmd 
 //     } '}'
 void parseFunc() {
-    printf(">> Entrando parseFunc\n");
 
     match(TOKEN_LBRACE);
-    printf("[FUNC] Abriu bloco '{'\n");
 
     while (isTipo(currentToken.type)) {
-        printf("[FUNC] Tipo detectado para declaração dentro da função\n");
-
         parseTipo();
-        printf("[FUNC] Tipo consumido com sucesso\n");
-
-        printf("[FUNC] Chamando parseDeclVarPrimeiro\n");
         parseDeclVarPrimeiro();
-
-        printf("[FUNC] Chamando parseDeclVarResto (para múltiplas variáveis)\n");
         parseDeclVarResto();
-
-        printf("[FUNC] Esperando ';' após declaração de variável\n");
         expect(TOKEN_SEMICOLON);
-        printf("[FUNC] ';' consumido com sucesso\n");
     }
 
-    printf("[FUNC] Entrando na parte de comandos\n");
-
     while (currentToken.type != TOKEN_RBRACE && currentToken.type != TOKEN_EOF) {
-        printf("[FUNC] Chamando parseCmd (token atual: '%s')\n", currentToken.lexeme);
         parseCmd();
     }
 
-    printf("[FUNC] Fechando bloco da função com '}'\n");
     match(TOKEN_RBRACE);
-    printf("<< Saindo parseFunc\n");
 }
 
 // cmd ::= if '(' expr ')' cmd [ else cmd ] 
@@ -285,7 +265,7 @@ void parseFunc() {
 void parseCmd() {
     if (currentToken.type == TOKEN_KEYWORD_IF) {
         printf("[CMD] Reconhecido comando 'if'\n");
-        advance(); // consome 'if'
+        advance();
 
         match(TOKEN_LPAREN);
         parseExpr();
@@ -295,13 +275,13 @@ void parseCmd() {
 
         if (currentToken.type == TOKEN_KEYWORD_ELSE) {
             printf("[CMD] Reconhecido bloco 'else'\n");
-            advance(); // consome 'else'
+            advance();
             parseCmd();
         }
 
     } else if (currentToken.type == TOKEN_KEYWORD_WHILE) {
         printf("[CMD] Reconhecido comando 'while'\n");
-        advance(); // consome 'while'
+        advance();
 
         match(TOKEN_LPAREN);
         parseExpr();
@@ -311,23 +291,20 @@ void parseCmd() {
 
     } else if (currentToken.type == TOKEN_KEYWORD_FOR) {
         printf("[CMD] Reconhecido comando 'for'\n");
-        advance(); // consome 'for'
+        advance();
 
         match(TOKEN_LPAREN);
 
-        // [ atrib ]
         if (currentToken.type == TOKEN_ID) {
             parseAtrib();
         }
         match(TOKEN_SEMICOLON);
 
-        // [ expr ]
         if (currentToken.type != TOKEN_SEMICOLON) {
             parseExpr();
         }
         match(TOKEN_SEMICOLON);
 
-        // [ atrib ]
         if (currentToken.type == TOKEN_ID) {
             parseAtrib();
         }
@@ -337,9 +314,8 @@ void parseCmd() {
 
     } else if (currentToken.type == TOKEN_KEYWORD_RETURN) {
         printf("[CMD] Reconhecido comando 'return'\n");
-        advance(); // consome 'return'
+        advance();
 
-        // [ expr ]
         if (currentToken.type != TOKEN_SEMICOLON) {
             parseExpr();
         }
@@ -348,7 +324,7 @@ void parseCmd() {
 
     } else if (currentToken.type == TOKEN_LBRACE) {
         printf("[CMD] Bloco composto reconhecido\n");
-        advance(); // consome '{'
+        advance();
 
         while (currentToken.type != TOKEN_RBRACE && currentToken.type != TOKEN_EOF) {
             parseCmd();
@@ -357,20 +333,42 @@ void parseCmd() {
 
     } else if (currentToken.type == TOKEN_SEMICOLON) {
         printf("[CMD] Comando vazio reconhecido\n");
-        advance(); // consome ';'   
+        advance();
+
     } else if (currentToken.type == TOKEN_ID) {
-        Token lookahead = getNextToken(); // pega o próximo token
-        ungetToken(lookahead);            // devolve ele pro fluxo
+        Token lookahead = getNextToken();
+        ungetToken(lookahead);
 
         if (lookahead.type == TOKEN_ASSIGN || lookahead.type == TOKEN_LBRACK) {
             parseAtrib();
             match(TOKEN_SEMICOLON);
             return;
+
+        } else if (lookahead.type == TOKEN_LPAREN) {
+            // chamada de função como comando
+            printf("[CMD] Chamada de função reconhecida: %s\n", currentToken.lexeme);
+            advance(); // consome id
+            match(TOKEN_LPAREN);
+
+            if (currentToken.type != TOKEN_RPAREN) {
+                parseExpr();
+
+                while (currentToken.type == TOKEN_COMMA) {
+                    advance();
+                    parseExpr();
+                }
+            }
+
+            match(TOKEN_RPAREN);
+            match(TOKEN_SEMICOLON);
+            return;
+        } else {
+            erro("Identificador inesperado — esperada atribuição ou chamada de função");
         }
-    }else {
-        // Placeholder para comandos ainda não tratados
-        printf("[CMD] Comando (placeholder) reconhecido: token '%s'\n", currentToken.lexeme);
-        advance();
+
+    } else {
+        printf("[CMD] Comando inválido ou não tratado: token '%s'\n", currentToken.lexeme);
+        erro("Comando não reconhecido");
     }
 }
 
@@ -546,7 +544,6 @@ void parseDeclVarPrimeiro() {
     }
 }
 
-
 void parseDeclVarResto() {
     while (currentToken.type == TOKEN_COMMA) {
         advance(); // consome ','
@@ -574,7 +571,6 @@ void parseDeclVarResto() {
         }
     }
 }
-
 
 void parseTipoParam() {
     if (!isTipo(currentToken.type)) {
@@ -639,7 +635,6 @@ void ungetToken(Token t) {
     tokenBack = true;
 }
 
-// decl_var { ',' decl_var }
 void parseDeclVarLista() {
     parseDeclVar(); // primeiro já consumido id
 

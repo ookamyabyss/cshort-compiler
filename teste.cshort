@@ -1,48 +1,11 @@
-int x;
-float y[10];
-char a, b, c[5];
-
-int soma(int a, int b) {
-    int resultado;
-    resultado = a + b;
-    return resultado;
-}
-
-void mostra(void) {
-    return;
-}
-
-void funcComVetorParam(int v[], char nome[], float &&ref) {
-    int i;
-    for (i = 0; i < 10; i = i + 1) {
-        v[i] = i * 2;
-    }
-}
 
 void comandos(void) {
-    int i, v[5];
 
-    i = 0;
-    while (i < 5) {
-        if (v[i] == 0)
-            v[i] = 1;
-        else
-            v[i] = 2;
-        i = i + 1;
-    }
-
-    v[0] = soma(1, 2);
 
     {
-        v[1] = 5;
-        return;
+        z = 10;
     }
 
     ;
 }
 
-
-void exprTeste(void) {
-    int a, b, c;
-    a = (b + c) * 2 && !(b == 3);
-}

@@ -59,6 +59,7 @@ void startParser(FILE* f) {
 
 // prog ::= { decl ';' | func } 
 void parseProg() {
+    printf(">> Entrando parseProg\n");
     while (currentToken.type != TOKEN_EOF) {
         if (isTipo(currentToken.type)) {
             // Pode ser declaração ou função
@@ -76,6 +77,7 @@ void parseProg() {
 //      | tipo id '(' tipos_param')' { ',' id '(' tipos_param')' } 
 //      | void id '(' tipos_param')' { ',' id '(' tipos_param')' }
 void parseDecl() {
+    printf(">> Entrando parseDecl\n");
     if (isTipo(currentToken.type)) {
         parseTipo();
 
@@ -83,6 +85,7 @@ void parseDecl() {
             char nomeFunc[256];
             strncpy(nomeFunc, currentToken.lexeme, sizeof(nomeFunc));
             nomeFunc[sizeof(nomeFunc) - 1] = '\0';
+            //Token idToken = currentToken;
 
             advance();
 
@@ -112,12 +115,26 @@ void parseDecl() {
             } else {
                 // declaração variável
                 printf("[DECL] Reconhecida declaração de variável (primeiro ID: %s)\n", nomeFunc);
-                while (currentToken.type == TOKEN_COMMA) {
-                    advance(); // consome ','
-                    parseDeclVar(); // consome próximo id e opcional vetor
+                // Verifica se há vetor após o primeiro identificador
+                if (currentToken.type == TOKEN_LBRACK) {
+                    advance(); // consome '['
+
+                    if (currentToken.type == TOKEN_INTCON) {
+                        printf("[DECL_VAR] Vetor de tamanho: %s\n", currentToken.lexeme);
+                        advance(); // consome número
+                        expect(TOKEN_RBRACK); // consome ']'
+                    } else {
+                        erro("Esperado número inteiro dentro dos colchetes após o identificador");
+                    }
                 }
 
-            expect(TOKEN_SEMICOLON);
+                // Agora trata as outras variáveis separadas por vírgula
+                while (currentToken.type == TOKEN_COMMA) {
+                    advance(); // consome ','
+                    parseDeclVar(); // consome próximo id e vetor se tiver
+                }
+
+                expect(TOKEN_SEMICOLON);
 
             }
         } else {
@@ -164,6 +181,7 @@ void parseDecl() {
 
 // decl_var ::= id [ '[' intcon ']' ] 
 void parseDeclVar() {
+    printf(">> Entrando parseDeclVar\n");
     char id_lexeme[256];
     strncpy(id_lexeme, currentToken.lexeme, sizeof(id_lexeme));
     id_lexeme[sizeof(id_lexeme) - 1] = '\0';
@@ -222,23 +240,39 @@ void parseTiposParam() {
 //     | void id '(' tipos_param')' '{' { tipo decl_var{ ',' decl_var} ';' } { cmd 
 //     } '}'
 void parseFunc() {
+    printf(">> Entrando parseFunc\n");
+
     match(TOKEN_LBRACE);
+    printf("[FUNC] Abriu bloco '{'\n");
 
     while (isTipo(currentToken.type)) {
-        //TokenType tipoAtual = currentToken.type;
+        printf("[FUNC] Tipo detectado para declaração dentro da função\n");
+
         parseTipo();
+        printf("[FUNC] Tipo consumido com sucesso\n");
+
+        printf("[FUNC] Chamando parseDeclVarPrimeiro\n");
         parseDeclVarPrimeiro();
+
+        printf("[FUNC] Chamando parseDeclVarResto (para múltiplas variáveis)\n");
         parseDeclVarResto();
+
+        printf("[FUNC] Esperando ';' após declaração de variável\n");
         expect(TOKEN_SEMICOLON);
+        printf("[FUNC] ';' consumido com sucesso\n");
     }
 
+    printf("[FUNC] Entrando na parte de comandos\n");
+
     while (currentToken.type != TOKEN_RBRACE && currentToken.type != TOKEN_EOF) {
+        printf("[FUNC] Chamando parseCmd (token atual: '%s')\n", currentToken.lexeme);
         parseCmd();
     }
 
+    printf("[FUNC] Fechando bloco da função com '}'\n");
     match(TOKEN_RBRACE);
+    printf("<< Saindo parseFunc\n");
 }
-
 
 // cmd ::= if '(' expr ')' cmd [ else cmd ] 
 //     | while '(' expr ')' cmd 
@@ -489,25 +523,58 @@ int isTipo(TokenType t) {
 }
 
 void parseDeclVarPrimeiro() {
-    expect(TOKEN_ID);
-    printf("[DECL_VAR] Reconhecida variável: %s\n", currentToken.lexeme);
+    if (currentToken.type != TOKEN_ID) {
+        erro("Esperado identificador na declaração de variável");
+    }
+
+    char nome[256];
+    strncpy(nome, currentToken.lexeme, sizeof(nome));
+    nome[sizeof(nome) - 1] = '\0';
+    advance(); // consome o ID
+
+    printf("[DECL_VAR] Reconhecida variável: %s\n", nome);
 
     if (currentToken.type == TOKEN_LBRACK) {
         advance();
-        printf("[DECL_VAR] Vetor com tamanho: %s\n", currentToken.lexeme);
-        expect(TOKEN_INTCON);
-        expect(TOKEN_RBRACK);
+        if (currentToken.type == TOKEN_INTCON) {
+            printf("[DECL_VAR] Vetor com tamanho: %s\n", currentToken.lexeme);
+            advance();
+            expect(TOKEN_RBRACK);
+        } else {
+            erro("Esperado número inteiro dentro dos colchetes");
+        }
     }
 }
 
+
 void parseDeclVarResto() {
     while (currentToken.type == TOKEN_COMMA) {
-        advance();
-        expect(TOKEN_ID);
-        printf("[DECL_VAR] Reconhecida variável extra: %s\n", currentToken.lexeme);
-        parseDeclVarPrimeiro();
+        advance(); // consome ','
+
+        if (currentToken.type != TOKEN_ID) {
+            erro("Esperado identificador após ','");
+        }
+
+        char nome[256];
+        strncpy(nome, currentToken.lexeme, sizeof(nome));
+        nome[sizeof(nome) - 1] = '\0';
+        advance(); // consome o ID
+
+        printf("[DECL_VAR] Reconhecida variável extra: %s\n", nome);
+
+        if (currentToken.type == TOKEN_LBRACK) {
+            advance();
+            if (currentToken.type == TOKEN_INTCON) {
+                printf("[DECL_VAR] Vetor de tamanho: %s\n", currentToken.lexeme);
+                advance();
+                expect(TOKEN_RBRACK);
+            } else {
+                erro("Esperado número inteiro dentro dos colchetes");
+            }
+        }
     }
 }
+
 
 void parseTipoParam() {
     if (!isTipo(currentToken.type)) {

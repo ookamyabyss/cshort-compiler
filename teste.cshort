@@ -1,7 +1,21 @@
-int calcula(int val, float &&peso, bool flags[]) {
-    int x, y;
-    float resultado;
-    x = val + 1;
-    y = x * 2;
-    resultado = soma(x, y) + peso[0];
+
+int x;
+float y, z;
+
+int soma(int x, int y) {
+    int r;
+}
+
+int soma(int x, int y) {
+    int r;
+    return x + y;
+}
+
+void main(void) {
+    int i;
+    for (i = 0; i < 10; i = i + 1)
+        if (i / 2 == 0)
+            continue;
+        else
+            break;
 }

@@ -26,7 +26,6 @@ void advance() {
     }
 }
 
-
 void pushBackToken(Token t) {
     pushedToken = t;
     hasPushedToken = 1;
@@ -96,36 +95,30 @@ void parseDecl() {
 
                 while (currentToken.type == TOKEN_COMMA) {
                     advance();
-
-                    if (currentToken.type != TOKEN_ID) {
-                        erro("Esperado identificador após ',' na declaração de função");
-                    }
-
-                    char funcName[256];
-                    strncpy(funcName, currentToken.lexeme, sizeof(funcName));
-                    funcName[sizeof(funcName) - 1] = '\0';
-
-                    advance(); // consome o ID
+                    expect(TOKEN_ID);
+                    printf("[DECL_FUNCAO] Função adicional reconhecida: %s\n", currentToken.lexeme);
                     expect(TOKEN_LPAREN);
                     parseTiposParam();
                     expect(TOKEN_RPAREN);
-
-                    printf("[DECL_FUNCAO] Função adicional reconhecida: %s\n", funcName);
                 }
 
-                if (currentToken.type == TOKEN_SEMICOLON) {
-                    advance();
-                } else if (currentToken.type == TOKEN_LBRACE) {
-                    parseFunc();
-                } else {
-                    erro("Esperado ';' ou '{' após declaração de função");
-                }
+            if (currentToken.type == TOKEN_SEMICOLON) {
+                advance();
+            } else if (currentToken.type == TOKEN_LBRACE) {
+                parseFunc();
+            } else {
+                erro("Esperado ';' ou '{' após declaração de função");
+            }
             } else {
                 // declaração variável
                 printf("[DECL] Reconhecida declaração de variável (primeiro ID: %s)\n", nomeFunc);
-                parseDeclVarPrimeiro();
-                parseDeclVarResto();
-                expect(TOKEN_SEMICOLON);
+                while (currentToken.type == TOKEN_COMMA) {
+                    advance(); // consome ','
+                    parseDeclVar(); // consome próximo id e opcional vetor
+                }
+
+            expect(TOKEN_SEMICOLON);
+
             }
         } else {
             erro("Esperado identificador após tipo");
@@ -229,19 +222,23 @@ void parseTiposParam() {
 //     | void id '(' tipos_param')' '{' { tipo decl_var{ ',' decl_var} ';' } { cmd 
 //     } '}'
 void parseFunc() {
-    // { tipo decl_var { ',' decl_var } ';' }
+    match(TOKEN_LBRACE);
+
     while (isTipo(currentToken.type)) {
-        TokenType tipoAtual = currentToken.type;  // Salva o tipo atual antes de consumir
-        parseTipo();                              // Consome o tipo (ex: int)
-        printf("[LOCAL] Declaração local iniciada: %s\n", tokenTypeName(tipoAtual));  // Usa o tipo salvo
-        parseDeclVarPrimeiro();  // espera que o ID venha logo depois
+        //TokenType tipoAtual = currentToken.type;
+        parseTipo();
+        parseDeclVarPrimeiro();
         parseDeclVarResto();
         expect(TOKEN_SEMICOLON);
     }
 
-    // { cmd }
-    parseCmd();
+    while (currentToken.type != TOKEN_RBRACE && currentToken.type != TOKEN_EOF) {
+        parseCmd();
+    }
+
+    match(TOKEN_RBRACE);
 }
+
 
 // cmd ::= if '(' expr ')' cmd [ else cmd ] 
 //     | while '(' expr ')' cmd 
@@ -326,8 +323,17 @@ void parseCmd() {
 
     } else if (currentToken.type == TOKEN_SEMICOLON) {
         printf("[CMD] Comando vazio reconhecido\n");
-        advance(); // consome ';'
-    } else {
+        advance(); // consome ';'   
+    } else if (currentToken.type == TOKEN_ID) {
+        Token lookahead = getNextToken(); // pega o próximo token
+        ungetToken(lookahead);            // devolve ele pro fluxo
+
+        if (lookahead.type == TOKEN_ASSIGN || lookahead.type == TOKEN_LBRACK) {
+            parseAtrib();
+            match(TOKEN_SEMICOLON);
+            return;
+        }
+    }else {
         // Placeholder para comandos ainda não tratados
         printf("[CMD] Comando (placeholder) reconhecido: token '%s'\n", currentToken.lexeme);
         advance();
@@ -483,8 +489,9 @@ int isTipo(TokenType t) {
 }
 
 void parseDeclVarPrimeiro() {
-    // Aqui o id já foi consumido no parseDecl
-    printf("[DECL_VAR] Reconhecida variável (primeira)\n");
+    expect(TOKEN_ID);
+    printf("[DECL_VAR] Reconhecida variável: %s\n", currentToken.lexeme);
+
     if (currentToken.type == TOKEN_LBRACK) {
         advance();
         printf("[DECL_VAR] Vetor com tamanho: %s\n", currentToken.lexeme);
@@ -497,7 +504,7 @@ void parseDeclVarResto() {
     while (currentToken.type == TOKEN_COMMA) {
         advance();
         expect(TOKEN_ID);
-        printf("[DECL_VAR] Reconhecida variável (extra)\n");
+        printf("[DECL_VAR] Reconhecida variável extra: %s\n", currentToken.lexeme);
         parseDeclVarPrimeiro();
     }
 }
@@ -560,7 +567,17 @@ void match(int expectedType) {
     }
 }
 
-void ungetToken(Token tok) {
+void ungetToken(Token t) {
+    backupToken = t;
     tokenBack = true;
-    backupToken = tok;
+}
+
+// decl_var { ',' decl_var }
+void parseDeclVarLista() {
+    parseDeclVar(); // primeiro já consumido id
+
+    while (currentToken.type == TOKEN_COMMA) {
+        advance(); // consome ','
+        parseDeclVar(); // próximo id
+    }
 }

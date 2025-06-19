@@ -76,7 +76,10 @@ void match(int expectedType);
 
 void parseAtribComIDJaLido();
 
-void ungetToken(Token tok);
+void ungetToken(Token t);
 
 void parseLocalDecl();
+
+void parseDeclVarLista(); 
+
 #endif // PARSER_H

@@ -85,7 +85,7 @@ make
 🧮 AFD - Autômato Finito Determinístico
 📅 Versão 2.3 - 21/06/2025
 
-<p align="center"> <img src="./assets/cshort_afd.png" alt="AFD - Cshort"/> </p>
+<p align="center"> <img src="./assets/cshort_afd" alt="AFD - Cshort"/> </p>
 
 
 👥 Autores

@@ -32,6 +32,7 @@ typedef enum {
     TOKEN_ASSIGN,     // =
     TOKEN_AND,        // &&
     TOKEN_BITAND,     // &
+    TOKEN_OR,         // ||
 
     // Delimitadores
     TOKEN_LPAREN,     // (

@@ -30,8 +30,9 @@ typedef enum {
     TOKEN_LEQ,        // <=
     TOKEN_GEQ,        // >=
     TOKEN_ASSIGN,     // =
+    TOKEN_BITAND,     // &
     TOKEN_AND,        // &&
-    TOKEN_OR,        // ||
+    TOKEN_OR,         // ||
 
     // Delimitadores
     TOKEN_LPAREN,     // (
@@ -64,8 +65,6 @@ typedef enum {
     TOKEN_KEYWORD_CASE,
     TOKEN_KEYWORD_DEFAULT,
     TOKEN_KEYWORD_STRING,
-
-    TOKEN_AMPERSAND,   // &
 
     // Outros
     TOKEN_EOF,

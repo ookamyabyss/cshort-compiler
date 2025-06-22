@@ -208,7 +208,7 @@ void parseTipo() {
 }
 
 // tipos_param ::= void 
-//              | tipo (id | &&id | id '[' ']') { ','  tipo (id | &&id | id '[' ']') }
+//              | tipo (id | &id | id '[' ']') { ','  tipo (id | &id | id '[' ']') }
 void parseTiposParam() {
     if (currentToken.type == TOKEN_RPAREN) {
         return;
@@ -579,11 +579,11 @@ void parseTipoParam() {
 
     advance(); // consome o tipo
 
-    // Verifica se é '&&' (um único token do tipo TOKEN_AND)
+    // Verifica se é '&' (um único token do tipo TOKEN_AND)
     int porReferencia = 0;
-    if (currentToken.type == TOKEN_AND) {
+    if (currentToken.type == TOKEN_BITAND) {
         porReferencia = 1;
-        advance(); // consome '&&'
+        advance(); // consome '&'
     }
 
     // Agora deve vir um identificador

@@ -39,8 +39,7 @@ make
 
 ```
 
-📜 Gramática — Cshort v1.0
-<details> <summary><strong>🎯 Regras principais (clique para expandir)</strong></summary>
+<details> <summary><strong>📜 Gramática — Cshort v1.0 (clique para expandir)</strong></summary>
 
 // prog ::= { decl ';' | func } 
 
@@ -50,4 +49,40 @@ make
 
 // decl_var ::= id [ '[' intcon ']' ]
 
-![Cshort](./assets/cshort_afd.png)
+// tipo ::= char | int | float | bool
+
+// tipos_param ::= void 
+//               | tipo (id | &id | id '[' ']') { ',' tipo (id | &id | id '[' ']') }
+
+// func ::= tipo id '(' tipos_param ')' '{' { tipo decl_var { ',' decl_var } ';' } { cmd } '}'
+//        | void id '(' tipos_param ')' '{' { tipo decl_var { ',' decl_var } ';' } { cmd } '}'
+
+// cmd ::= if '(' expr ')' cmd [ else cmd ] 
+//       | while '(' expr ')' cmd 
+//       | for '(' [ atrib ] ';' [ expr ] ';' [ atrib ] ')' cmd 
+//       | return [ expr ] ';' 
+//       | atrib ';' 
+//       | id '(' [expr { ',' expr } ] ')' ';' 
+//       | '{' { cmd } '}' 
+//       | ';' 
+
+// atrib ::= id [ '[' expr ']' ] = expr
+
+// expr ::= expr_simp [ op_rel expr_simp ]
+
+// expr_simp ::= [+ | - ] termo {(+ | - | ||) termo}
+
+// termo ::= fator {(* | / | & ) fator}
+
+// fator ::= id [ '[' expr ']' ] 
+//         | intcon | realcon | charcon 
+//         | id '(' [expr { ',' expr } ] ')' 
+//         | '(' expr ')' 
+//         | '!' fator
+
+</details>
+
+🧮 AFD - Autômato Finito Determinístico
+📅 Versão 2.3 - 21/06/2025
+
+<p align="center"> <img src="./assets/cshort_afd.png" alt="AFD - Cshort" width="600"/> </p>

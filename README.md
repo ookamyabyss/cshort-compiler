@@ -1,5 +1,4 @@
-**Cshort Compiler** - Analisador Léxico vers 1.0 
-
+<h1 align="center">⚙️ Cshort Compiler</h1> <h3 align="center">🔍 Analisador Léxico + 🧠 Analisador Sintático — Versão 1.0</h3> <p align="center"> <img src="https://img.shields.io/badge/status-stable-brightgreen" alt="status"> <img src="https://img.shields.io/badge/version-1.0-blue" alt="version"> <img src="https://img.shields.io/badge/AFD-2.3-lightgrey" alt="afd"> </p>
 ---
 
 ## ⚙️ Pré-requisitos

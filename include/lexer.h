@@ -30,8 +30,8 @@ typedef enum {
     TOKEN_LEQ,        // <=
     TOKEN_GEQ,        // >=
     TOKEN_ASSIGN,     // =
-    TOKEN_AND,        // &&
     TOKEN_BITAND,     // &
+    TOKEN_AND,        // &&
     TOKEN_OR,         // ||
 
     // Delimitadores
@@ -47,12 +47,33 @@ typedef enum {
     // Palavra-chave (verificada depois)
     TOKEN_KEYWORD,
 
+    // Palavras-chave específicas
+    TOKEN_KEYWORD_INT,
+    TOKEN_KEYWORD_CHAR,
+    TOKEN_KEYWORD_FLOAT,
+    TOKEN_KEYWORD_BOOL,
+    TOKEN_KEYWORD_IF,
+    TOKEN_KEYWORD_ELSE,
+    TOKEN_KEYWORD_WHILE,
+    TOKEN_KEYWORD_RETURN,
+    TOKEN_KEYWORD_FOR,
+    TOKEN_KEYWORD_VOID,
+    TOKEN_KEYWORD_BREAK,
+    TOKEN_KEYWORD_CONTINUE,
+    TOKEN_KEYWORD_DO,
+    TOKEN_KEYWORD_SWITCH,
+    TOKEN_KEYWORD_CASE,
+    TOKEN_KEYWORD_DEFAULT,
+    TOKEN_KEYWORD_STRING,
+
+    TOKEN_AMPERSAND,   // &
+
     // Outros
     TOKEN_EOF,
     TOKEN_INVALID
 } TokenType;
 
-// Subcategorias opcionais
+// Subcategorias opcionais para operadores
 typedef enum {
     OP_PLUS,
     OP_MINUS,
@@ -76,10 +97,10 @@ typedef struct {
         int intVal;       // Se TOKEN_INTCON
         float realVal;    // Se TOKEN_REALCON
         char charVal;     // Se TOKEN_CHARCON
-        char* strVal;     // Se TOKEN_STRINGCON ou TOKEN_ID ou palavra-chave
+        char* strVal;     // Se TOKEN_STRINGCON, TOKEN_ID ou palavra-chave
     };
 
-    char lexeme[TAM_MAX_LEXEMA]; // Lexema original (útil sempre)
+    char lexeme[TAM_MAX_LEXEMA]; // Lexema original
     int line;           // Linha de origem
     int column;         // Coluna inicial
 } Token;
@@ -94,4 +115,4 @@ void destroyLexer();            // Libera recursos
 
 const char* tokenTypeName(TokenType type);
 
-#endif // LEXER_H
+#endif 

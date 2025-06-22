@@ -89,4 +89,4 @@ make
 
 
 👥 Autores
-<table> <tr> <td align="center"> <a href="https://github.com/ookamyabyss" target="_blank"> <img src="https://github.com/ookamyabyss.png" width="100px;" alt="rafaeldev"/><br /> <sub><b>Rafael R C da Cruz</b></sub><br /> 🧠 Analisador Léxico & Sintático<br /> <i>@rafaeldev</i> </a> </td> <td align="center"> <a href="https://github.com/wongstrab" target="_blank"> <img src="https://github.com/wongstrab.png" width="100px;" alt="wongstrab"/><br /> <sub><b>Wong Strab</b></sub><br /> 🛠️ Estrutura do Projeto & Parser<br /> <i>@wongstrab</i> </a> </td> </tr> </table>
+<table> <tr> <td align="center"> <a href="https://github.com/ookamyabyss" target="_blank"> <img src="https://github.com/ookamyabyss.png" width="100px;" alt="rafaeldev"/><br /> <sub><b>Rafael R C da Cruz</b></sub><br /> Queridinho dos Chefes <br /> <i>@ookamyabyss</i> </a> </td> <td align="center"> <a href="https://github.com/wongstrab" target="_blank"> <img src="https://github.com/wongstrab.png" width="100px;" alt="wongstrab"/><br /> <sub><b>Wong Strab</b></sub><br /> 🛠️ Estrutura do Projeto & Parser<br /> <i>@wongstrab</i> </a> </td> </tr> </table>

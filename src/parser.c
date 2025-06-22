@@ -1,21 +1,26 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "parser.h"
-#include "lexer.h"
 #include <stdbool.h>
 
-// Token atual (lookahead)
-static Token currentToken;
+#include "parser.h"
+#include "lexer.h"
 
-// Buffer para um token devolvido
-Token pushedToken;
-int hasPushedToken = 0;
+// ==============================
+// Variáveis globais
+// ==============================
 
-bool tokenBack = false;
-Token backupToken;
+static Token currentToken;     // Lookahead atual
+static Token backupToken;      // Token salvo para "voltar"
+static Token pushedToken;      // Token empurrado manualmente
+static int hasPushedToken = 0;
+static bool tokenBack = false;
 
-// Avança para o próximo token
+// ==============================
+// Controle de Tokens
+// ==============================
+
+// Avança para o próximo token.
 void advance() {
     if (tokenBack) {
         tokenBack = false;
@@ -26,18 +31,42 @@ void advance() {
     }
 }
 
+// Salva um token para ser lido novamente no próximo `advance()`.
 void pushBackToken(Token t) {
     pushedToken = t;
     hasPushedToken = 1;
 }
 
+// Marca que o token atual deve ser reutilizado.
+void ungetToken(Token t) {
+    backupToken = t;
+    tokenBack = true;
+}
+
+// ==============================
+// Erros
+// ==============================
+
+// Exibe erro sintático e encerra a execução.
 static void erro(const char* msg) {
     fprintf(stderr, "[ERRO] %s na linha %d, coluna %d. Token: '%s'\n",
             msg, currentToken.line, currentToken.column, currentToken.lexeme);
     exit(EXIT_FAILURE);
 }
 
-// Verifica e consome o token esperado
+// Espera e consome um token do tipo esperado.
+void match(int expectedType) {
+    if (currentToken.type == expectedType) {
+        advance();
+    } else {
+        fprintf(stderr, "[ERRO SINTÁTICO] Esperado token do tipo %d, mas encontrado '%s' (linha %d, coluna %d)\n",
+                expectedType, currentToken.lexeme, currentToken.line, currentToken.column);
+        exit(EXIT_FAILURE); // encerra o programa, mas você pode adaptar para recuperação de erro
+    }
+}
+
+// Espera e consome um token específico (mesma função de match).
+// Usado por compatibilidade com o resto do parser
 static void expect(TokenType expected) {
     if (currentToken.type == expected) {
         advance();
@@ -47,6 +76,26 @@ static void expect(TokenType expected) {
         exit(EXIT_FAILURE);
     }
 }
+
+// Exibe erro sintático genérico.
+void syntaxError(const char* msg) {
+    fprintf(stderr, "[ERRO SINTÁTICO] %s: encontrado '%s' (linha %d, coluna %d)\n",
+            msg, currentToken.lexeme, currentToken.line, currentToken.column);
+    exit(EXIT_FAILURE);
+}
+
+// Consome token esperado, erro se não for
+void eat(int expectedTokenType) {
+    if (currentToken.type == expectedTokenType) {
+        advance();
+    } else {
+        syntaxError("Token inesperado");
+    }
+}
+
+// ==============================
+// Entrada do Parser
+// ==============================
 
 // Ponto de entrada do parser
 void startParser(FILE* f) {
@@ -72,9 +121,7 @@ void parseProg() {
     }
 }
 
-// decl ::= tipo decl_var { ',' decl_var}  
-//      | tipo id '(' tipos_param')' { ',' id '(' tipos_param')' } 
-//      | void id '(' tipos_param')' { ',' id '(' tipos_param')' }
+// decl ::= tipo decl_var {...} | tipo id(...) {...} | void id(...) {...}
 void parseDecl() {
     if (isTipo(currentToken.type)) {
         parseTipo();
@@ -177,7 +224,7 @@ void parseDecl() {
     }
 }
 
-// decl_var ::= id [ '[' intcon ']' ] 
+// decl_var ::= id [ '[' intcon ']' ]
 void parseDeclVar() {
     char id_lexeme[256];
     strncpy(id_lexeme, currentToken.lexeme, sizeof(id_lexeme));
@@ -207,8 +254,7 @@ void parseTipo() {
     }
 }
 
-// tipos_param ::= void 
-//              | tipo (id | &id | id '[' ']') { ','  tipo (id | &id | id '[' ']') }
+// tipos_param ::= void | tipo (id | &id | id[]){, tipo (...)}
 void parseTiposParam() {
     if (currentToken.type == TOKEN_RPAREN) {
         return;
@@ -232,10 +278,7 @@ void parseTiposParam() {
     }
 }
 
-// func ::= tipo id '(' tipos_param')' '{' { tipo decl_var{ ',' decl_var} ';' } { cmd } 
-//     '}' 
-//     | void id '(' tipos_param')' '{' { tipo decl_var{ ',' decl_var} ';' } { cmd 
-//     } '}'
+// func ::= tipo/void id(...) '{' {decl_var} {cmd} '}' 
 void parseFunc() {
 
     match(TOKEN_LBRACE);
@@ -254,14 +297,7 @@ void parseFunc() {
     match(TOKEN_RBRACE);
 }
 
-// cmd ::= if '(' expr ')' cmd [ else cmd ] 
-//     | while '(' expr ')' cmd 
-//     | for '(' [ atrib ] ';' [ expr ] ';' [ atrib ] ')' cmd 
-//     | return [ expr ] ';' 
-//     | atrib ';' 
-//     | id '(' [expr { ',' expr } ] ')' ';' 
-//     | '{' { cmd } '}' 
-//     | ';' 
+// cmd ::= if, while, for, return, atrib, chamada, bloco, ';'
 void parseCmd() {
     if (currentToken.type == TOKEN_KEYWORD_IF) {
         printf("[CMD] Reconhecido comando 'if'\n");
@@ -372,7 +408,7 @@ void parseCmd() {
     }
 }
 
-// atrib ::= id [ '[' expr ']' ] = expr 
+// atrib ::= id [ '[' expr ']' ] = expr
 void parseAtrib() {
     if (currentToken.type != TOKEN_ID) {
         syntaxError("Esperado identificador no início da atribuição");
@@ -440,8 +476,7 @@ void parseTermo() {
     printf("[EXPR] Expressão reconhecida (termo)\n");
 }
 
-// fator ::= id [ '[' expr ']' ] | intcon | realcon | charcon |  
-//           id '(' [expr { ',' expr } ] ')'  |  '(' expr ')'  | '!' fator 
+// fator ::= id[...] | constantes | chamada | (!fator)
 void parseFator() {
     if (currentToken.type == TOKEN_ID) {
         Token idToken = currentToken;
@@ -488,38 +523,11 @@ void parseFator() {
     }
 }
 
+// ==============================
+// Funções auxiliares de análise
+// ==============================
 
-
-
-// op_rel ::= ==  
-//        |!= 
-//        |<= 
-//        |< 
-//        |>= 
-//        |> 
-
-
-void eat(int expectedTokenType) {
-    if (currentToken.type == expectedTokenType) {
-        advance();
-    } else {
-        syntaxError("Token inesperado");
-    }
-}
-
-void syntaxError(const char* msg) {
-    fprintf(stderr, "[ERRO SINTÁTICO] %s: encontrado '%s' (linha %d, coluna %d)\n",
-            msg, currentToken.lexeme, currentToken.line, currentToken.column);
-    exit(EXIT_FAILURE);
-}
-
-int isTipo(TokenType t) {
-    return t == TOKEN_KEYWORD_INT ||
-           t == TOKEN_KEYWORD_CHAR ||
-           t == TOKEN_KEYWORD_FLOAT ||
-           t == TOKEN_KEYWORD_BOOL;
-}
-
+// Primeira variável da lista
 void parseDeclVarPrimeiro() {
     if (currentToken.type != TOKEN_ID) {
         erro("Esperado identificador na declaração de variável");
@@ -544,6 +552,7 @@ void parseDeclVarPrimeiro() {
     }
 }
 
+// Demais variáveis após vírgula
 void parseDeclVarResto() {
     while (currentToken.type == TOKEN_COMMA) {
         advance(); // consome ','
@@ -572,6 +581,7 @@ void parseDeclVarResto() {
     }
 }
 
+// Tipo (id | &id | id[])
 void parseTipoParam() {
     if (!isTipo(currentToken.type)) {
         erro("Esperado tipo (int, char, float, bool) no parâmetro");
@@ -606,7 +616,7 @@ void parseTipoParam() {
 
     // Imprime o tipo de parâmetro detectado
     if (porReferencia) {
-        printf("[PARAM] Parâmetro por referência: &&%s\n", nome);
+        printf("[PARAM] Parâmetro por referência: &%s\n", nome);
     } else if (isVetor) {
         printf("[PARAM] Parâmetro vetor: %s[]\n", nome);
     } else {
@@ -614,27 +624,7 @@ void parseTipoParam() {
     }
 }
 
-int isComandoInicio(TokenType t) {
-    return t == TOKEN_KEYWORD_IF || t == TOKEN_KEYWORD_WHILE ||
-           t == TOKEN_KEYWORD_RETURN || t == TOKEN_LBRACE ||
-           t == TOKEN_ID || t == TOKEN_SEMICOLON;
-}
-
-void match(int expectedType) {
-    if (currentToken.type == expectedType) {
-        advance();
-    } else {
-        fprintf(stderr, "[ERRO SINTÁTICO] Esperado token do tipo %d, mas encontrado '%s' (linha %d, coluna %d)\n",
-                expectedType, currentToken.lexeme, currentToken.line, currentToken.column);
-        exit(EXIT_FAILURE); // encerra o programa, mas você pode adaptar para recuperação de erro
-    }
-}
-
-void ungetToken(Token t) {
-    backupToken = t;
-    tokenBack = true;
-}
-
+// Lista de variáveis tipo v1, v2, v3;
 void parseDeclVarLista() {
     parseDeclVar(); // primeiro já consumido id
 
@@ -642,4 +632,23 @@ void parseDeclVarLista() {
         advance(); // consome ','
         parseDeclVar(); // próximo id
     }
+}
+
+// ==============================
+// Utilitários de parsing
+// ==============================
+
+// verifica se t é tipo válido
+int isTipo(TokenType t) {
+    return t == TOKEN_KEYWORD_INT ||
+           t == TOKEN_KEYWORD_CHAR ||
+           t == TOKEN_KEYWORD_FLOAT ||
+           t == TOKEN_KEYWORD_BOOL;
+}
+
+// verifica se t inicia comando
+int isComandoInicio(TokenType t) {
+    return t == TOKEN_KEYWORD_IF || t == TOKEN_KEYWORD_WHILE ||
+           t == TOKEN_KEYWORD_RETURN || t == TOKEN_LBRACE ||
+           t == TOKEN_ID || t == TOKEN_SEMICOLON;
 }

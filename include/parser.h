@@ -4,82 +4,54 @@
 #include <stdio.h>
 #include "lexer.h"
 
-// Inicializa o parser com o arquivo fonte
+// ==============================
+// Inicialização
+// ==============================
+
+/**
+ * Inicia o analisador sintático com o arquivo fonte.
+ */
 void startParser(FILE* f);
 
-// Função principal que inicia a análise sintática (ponto de entrada: prog)
+// ==============================
+// Regras da gramática principal
+// ==============================
 
-// prog ::= { decl ';' | func }
-void parseProg();
+void parseProg(void);         // prog ::= { decl ';' | func }
+void parseDecl(void);         // decl ::= tipo decl_var {...} | tipo id(...) {...} | void id(...) {...}
+void parseDeclVar(void);      // decl_var ::= id [ '[' intcon ']' ]
+void parseTipo(void);         // tipo ::= char | int | float | bool
+void parseTiposParam(void);   // tipos_param ::= void | tipo (id | &id | id[]){, tipo (...)}
 
-// decl ::= tipo decl_var { ',' decl_var} 
-//      | tipo id '(' tipos_param')' { ',' id '(' tipos_param')' } 
-//      | void id '(' tipos_param')' { ',' id '(' tipos_param')' }
-void parseDecl();
+void parseFunc(void);         // func ::= tipo/void id(...) '{' {decl_var} {cmd} '}' 
+void parseCmd(void);          // cmd ::= if, while, for, return, atrib, chamada, bloco, ';'
+void parseAtrib(void);        // atrib ::= id [ '[' expr ']' ] = expr
 
-// decl_var ::= id [ '[' intcon ']' ]
-void parseDeclVar();
+void parseExpr(void);         // expr ::= expr_simp [ op_rel expr_simp ]
+void parseExprSimp(void);     // expr_simp ::= [+|-] termo {(+|-|or) termo}
+void parseTermo(void);        // termo ::= fator {(*|/|and) fator}
+void parseFator(void);        // fator ::= id[...] | constantes | chamada | (!fator)
 
-// tipo ::= char | int | float | bool
-void parseTipo();
+// ==============================
+// Funções auxiliares de análise
+// ==============================
 
-//tipos_param ::= void 
-//              | tipo (id | &&id | id '[' ']') { ','  tipo (id | &&id | id '[' ']') }
-void parseTiposParam();
+void parseTipoParam(void);            // tipo (id | &id | id[])
+void parseDeclVarPrimeiro(void);      // primeira variável da lista
+void parseDeclVarResto(void);         // demais variáveis após vírgula
+void parseDeclVarLista(void);         // lista de variáveis tipo v1, v2, v3;
 
-// func ::= tipo id '(' tipos_param')' '{' { tipo decl_var{ ',' decl_var} ';' } { cmd } 
-//     '}' 
-//     | void id '(' tipos_param')' '{' { tipo decl_var{ ',' decl_var} ';' } { cmd 
-//     } '}'  
-void parseFunc();
+// ==============================
+// Utilitários de parsing
+// ==============================
 
-// cmd ::= if '(' expr ')' cmd [ else cmd ] 
-//     | while '(' expr ')' cmd 
-//     | for '(' [ atrib ] ';' [ expr ] ';' [ atrib ] ')' cmd 
-//     | return [ expr ] ';' 
-//     | atrib ';' 
-//     | id '(' [expr { ',' expr } ] ')' ';' 
-//     | '{' { cmd } '}' 
-//     | ';' 
-void parseCmd();
+int isTipo(TokenType t);              // verifica se t é tipo válido
+int isComandoInicio(TokenType t);     // verifica se t inicia comando
 
-// atrib ::= id [ '[' expr ']' ] = expr 
-void parseAtrib();
+void eat(int expectedTokenType);      // consome token esperado, erro se não for
+void match(int expectedType);         // consome token, erro se diferente
+void syntaxError(const char* msg);    // exibe erro sintático com mensagem
 
-// expr ::= expr_simp [ op_rel  expr_simp ] 
-void parseExpr();
-
-// expr_simp ::= [+ | – ] termo {(+ | – | ||) termo} 
-void parseExprSimp();
-
-// termo ::= fator {(* | / | &&)  fator} 
-void parseTermo();
-
-// fator ::= id [ '[' expr ']' ] | intcon | realcon | charcon |  
-//           id '(' [expr { ',' expr } ] ')'  |  '(' expr ')'  | '!' fator 
-void parseFator();
-
-void parseTipoParamVar();
-int isTipo(TokenType t);
-void parseParam();
-void parseDeclVarResto();
-void parseDeclVarPrimeiro();
-void parseTipoParam();
-int isComandoInicio(TokenType t);
-
-// Prototypes das funções usadas
-
-void eat(int expectedTokenType);
-void syntaxError(const char* msg);
-
-void match(int expectedType);
-
-void parseAtribComIDJaLido();
-
-void ungetToken(Token t);
-
-void parseLocalDecl();
-
-void parseDeclVarLista(); 
+void ungetToken(Token t);             // "devolve" token ao fluxo léxico
 
 #endif // PARSER_H

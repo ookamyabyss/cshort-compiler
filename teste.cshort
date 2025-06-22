@@ -1,6 +1,14 @@
-void funcComVetorParam(int v[], char nome[], float &ref) {
-    int i;
-    for (i = 0; i < 10; i = i + 1) {
-        v[i] = i * 2;
-    }
+int x;
+float y[10];
+char a, b, c[5];
+bool flag;
+
+int soma(int a, int b) {
+    int resultado;
+    resultado = a + b;
+    return resultado;
+}
+
+void mostra(void) {
+    return;
 }

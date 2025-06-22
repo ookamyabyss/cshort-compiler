@@ -488,9 +488,6 @@ void parseFator() {
     }
 }
 
-
-
-
 // op_rel ::= ==  
 //        |!= 
 //        |<= 
@@ -581,7 +578,7 @@ void parseTipoParam() {
 
     // Verifica se é '&&' (um único token do tipo TOKEN_AND)
     int porReferencia = 0;
-    if (currentToken.type == TOKEN_AND) {
+    if (currentToken.type == TOKEN_BITAND) {
         porReferencia = 1;
         advance(); // consome '&&'
     }

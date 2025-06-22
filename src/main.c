@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "lexer.h"
-#include "parser.h"  // <-- Inclui o parser
+#include "lexer.h"   // Analisador Léxico
+#include "parser.h"  // Analisador Sintático 
 
 int main(int argc, char* argv[]) {
     if (argc != 2) {

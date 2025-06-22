@@ -46,7 +46,9 @@ const char* tokenTypeName(TokenType type) {
         case TOKEN_EQ: return "==";
         case TOKEN_NEQ: return "!=";
         case TOKEN_ASSIGN: return "=";
+        case TOKEN_BITAND: return "&";
         case TOKEN_AND: return "&&";
+        case TOKEN_OR: return "||";
         case TOKEN_LPAREN: return "(";
         case TOKEN_RPAREN: return ")";
         case TOKEN_LBRACK: return "[";
@@ -63,6 +65,7 @@ const char* tokenTypeName(TokenType type) {
 }
 
 const int numKeywords = 16;
+
 
 // ==============================
 // FUNÇÕES AUXILIARES
@@ -160,8 +163,24 @@ Token getNextToken() {
             lastChar = nextChar();
         }
         lexeme[i] = '\0';
-        if (isKeyword(lexeme))
-            return makeToken(TOKEN_KEYWORD, lexeme, line, col);
+        if (strcmp(lexeme, "int") == 0)       return makeToken(TOKEN_KEYWORD_INT, lexeme, line, col);
+        else if (strcmp(lexeme, "char") == 0) return makeToken(TOKEN_KEYWORD_CHAR, lexeme, line, col);
+        else if (strcmp(lexeme, "bool") == 0) return makeToken(TOKEN_KEYWORD_BOOL, lexeme, line, col);
+        else if (strcmp(lexeme, "float") == 0) return makeToken(TOKEN_KEYWORD_FLOAT, lexeme, line, col);
+        else if (strcmp(lexeme, "if") == 0)   return makeToken(TOKEN_KEYWORD_IF, lexeme, line, col);
+        else if (strcmp(lexeme, "else") == 0) return makeToken(TOKEN_KEYWORD_ELSE, lexeme, line, col);
+        else if (strcmp(lexeme, "while") == 0) return makeToken(TOKEN_KEYWORD_WHILE, lexeme, line, col);
+        else if (strcmp(lexeme, "for") == 0)  return makeToken(TOKEN_KEYWORD_FOR, lexeme, line, col);
+        else if (strcmp(lexeme, "return") == 0) return makeToken(TOKEN_KEYWORD_RETURN, lexeme, line, col);
+        else if (strcmp(lexeme, "void") == 0) return makeToken(TOKEN_KEYWORD_VOID, lexeme, line, col);
+        else if (strcmp(lexeme, "break") == 0) return makeToken(TOKEN_KEYWORD_BREAK, lexeme, line, col);
+        else if (strcmp(lexeme, "continue") == 0) return makeToken(TOKEN_KEYWORD_CONTINUE, lexeme, line, col);
+        else if (strcmp(lexeme, "do") == 0) return makeToken(TOKEN_KEYWORD_DO, lexeme, line, col);
+        else if (strcmp(lexeme, "switch") == 0) return makeToken(TOKEN_KEYWORD_SWITCH, lexeme, line, col);
+        else if (strcmp(lexeme, "case") == 0) return makeToken(TOKEN_KEYWORD_CASE, lexeme, line, col);
+        else if (strcmp(lexeme, "default") == 0) return makeToken(TOKEN_KEYWORD_DEFAULT, lexeme, line, col);
+        else if (strcmp(lexeme, "string") == 0) return makeToken(TOKEN_KEYWORD_STRING, lexeme, line, col);
+        else return makeToken(TOKEN_ID, lexeme, line, col);
         return makeToken(TOKEN_ID, lexeme, line, col);
     }
 
@@ -302,7 +321,14 @@ Token getNextToken() {
                 lastChar = nextChar();
                 return makeToken(TOKEN_AND, "&&", line, col);
             }
-            return makeToken(TOKEN_INVALID, "&", line, col);
+            return makeToken(TOKEN_BITAND, "&", line, col);
+        case '|':
+            lastChar = nextChar();
+            if (lastChar == '|') {
+                lastChar = nextChar();
+                return makeToken(TOKEN_OR, "||", line, col);
+            }
+            return makeToken(TOKEN_INVALID, "|", line, col);
         case '(': lastChar = nextChar(); return makeToken(TOKEN_LPAREN, "(", line, col);
         case ')': lastChar = nextChar(); return makeToken(TOKEN_RPAREN, ")", line, col);
         case '[': lastChar = nextChar(); return makeToken(TOKEN_LBRACK, "[", line, col);

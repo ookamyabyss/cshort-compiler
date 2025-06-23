@@ -1,7 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "lexer.h"
-#include "parser.h"  // <-- Inclui o parser
+#include "parser.h" 
+#include "symbols.h"
 
 int main(int argc, char* argv[]) {
     if (argc != 2) {
@@ -17,6 +18,7 @@ int main(int argc, char* argv[]) {
 
     // Aqui antes era só o analisador léxico. Agora chamamos o parser completo:
     startParser(f);
+    imprimirTabela();     // imprime a tabela no fim
 
     fclose(f);
     return 0;

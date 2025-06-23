@@ -9,7 +9,7 @@ INCLUDE_DIR = include
 
 # Arquivos
 TARGET = $(BUILD_DIR)/cshort
-OBJS = $(BUILD_DIR)/lexer.o $(BUILD_DIR)/parser.o $(BUILD_DIR)/main.o
+OBJS = $(BUILD_DIR)/lexer.o $(BUILD_DIR)/parser.o $(BUILD_DIR)/symbols.o $(BUILD_DIR)/main.o
 
 # Regra principal
 all: $(TARGET)
@@ -28,6 +28,10 @@ $(BUILD_DIR)/parser.o: $(SRC_DIR)/parser.c $(INCLUDE_DIR)/parser.h $(INCLUDE_DIR
 
 # Compila main.c
 $(BUILD_DIR)/main.o: $(SRC_DIR)/main.c $(INCLUDE_DIR)/lexer.h $(INCLUDE_DIR)/parser.h | $(BUILD_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+# Tabela de Simbolos 
+$(BUILD_DIR)/symbols.o: $(SRC_DIR)/symbols.c $(INCLUDE_DIR)/symbols.h | $(BUILD_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 # Cria o diretório build/ se não existir

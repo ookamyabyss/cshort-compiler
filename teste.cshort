@@ -1,10 +1,7 @@
-int x;
-float y[10];
-char a, b, c[5];
-bool flag;
+int a;
 
-int soma(int a, int b) {
-    int resultado;
-    resultado = a + b;
-    return resultado;
-}
+float b[5];
+
+char c, d[10], e;
+
+

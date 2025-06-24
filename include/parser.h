@@ -3,6 +3,8 @@
 
 #include <stdio.h>
 #include "lexer.h"
+#include "symbols.h"
+
 
 // ==============================
 // Inicialização
@@ -19,7 +21,7 @@ void startParser(FILE* f);
 
 void parseProg(void);         // prog ::= { decl ';' | func }
 void parseDecl(void);         // decl ::= tipo decl_var {...} | tipo id(...) {...} | void id(...) {...}
-void parseDeclVar(void);      // decl_var ::= id [ '[' intcon ']' ]
+void parseDeclVar(const char* tipo, Escopo escopo);      // decl_var ::= id [ '[' intcon ']' ]
 void parseTipo(void);         // tipo ::= char | int | float | bool
 void parseTiposParam(void);   // tipos_param ::= void | tipo (id | &id | id[]){, tipo (...)}
 
@@ -39,7 +41,7 @@ void parseFator(void);        // fator ::= id[...] | constantes | chamada | (!fa
 void parseTipoParam(void);            // tipo (id | &id | id[])
 void parseDeclVarPrimeiro(void);      // primeira variável da lista
 void parseDeclVarResto(void);         // demais variáveis após vírgula
-void parseDeclVarLista(void);         // lista de variáveis tipo v1, v2, v3;
+void parseDeclVarLista(const char* tipo, Escopo escopo);        // lista de variáveis tipo v1, v2, v3;
 
 // ==============================
 // Utilitários de parsing
@@ -53,5 +55,8 @@ void match(int expectedType);         // consome token, erro se diferente
 void syntaxError(const char* msg);    // exibe erro sintático com mensagem
 
 void ungetToken(Token t);             // "devolve" token ao fluxo léxico
+
+
+
 
 #endif // PARSER_H

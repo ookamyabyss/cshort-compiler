@@ -5,6 +5,8 @@
 
 #include "parser.h"
 #include "lexer.h"
+#include "symbols.h"
+
 
 // ==============================
 // Variáveis globais
@@ -15,6 +17,8 @@ static Token backupToken;      // Token salvo para "voltar"
 static Token pushedToken;      // Token empurrado manualmente
 static int hasPushedToken = 0;
 static bool tokenBack = false;
+
+void obterTipoString(char* dest);
 
 // ==============================
 // Controle de Tokens
@@ -124,6 +128,8 @@ void parseProg() {
 // decl ::= tipo decl_var {...} | tipo id(...) {...} | void id(...) {...}
 void parseDecl() {
     if (isTipo(currentToken.type)) {
+        char tipoStr[10];
+        obterTipoString(tipoStr);  // ← Essa função pega o tipo em string
         parseTipo();
 
         if (currentToken.type == TOKEN_ID) {
@@ -160,6 +166,26 @@ void parseDecl() {
             } else {
                 // declaração variável
                 printf("[DECL] Reconhecida declaração de variável (primeiro ID: %s)\n", nomeFunc);
+
+                int isVetor = 0;
+                int tamanho = 1;
+
+                if (currentToken.type == TOKEN_LBRACK) {
+                    advance();
+                    if (currentToken.type == TOKEN_INTCON) {
+                        tamanho = atoi(currentToken.lexeme);
+                        isVetor = 1;
+                        printf("[DECL_VAR] Vetor de tamanho: %s\n", currentToken.lexeme);
+                        advance();
+                        expect(TOKEN_RBRACK);
+                    } else {
+                        erro("Esperado número inteiro dentro dos colchetes após o identificador");
+                    }
+                }
+
+                registrarVariavelGlobal(tipoStr, nomeFunc, isVetor, tamanho);
+
+
                 // Verifica se há vetor após o primeiro identificador
                 if (currentToken.type == TOKEN_LBRACK) {
                     advance(); // consome '['
@@ -176,7 +202,7 @@ void parseDecl() {
                 // Agora trata as outras variáveis separadas por vírgula
                 while (currentToken.type == TOKEN_COMMA) {
                     advance(); // consome ','
-                    parseDeclVar(); // consome próximo id e vetor se tiver
+                    parseDeclVar(tipoStr, ESC_GLOBAL); // consome próximo id e vetor se tiver
                 }
 
                 expect(TOKEN_SEMICOLON);
@@ -225,25 +251,33 @@ void parseDecl() {
 }
 
 // decl_var ::= id [ '[' intcon ']' ]
-void parseDeclVar() {
-    char id_lexeme[256];
-    strncpy(id_lexeme, currentToken.lexeme, sizeof(id_lexeme));
-    id_lexeme[sizeof(id_lexeme) - 1] = '\0';
+void parseDeclVar(const char* tipo, Escopo escopo) {
+    char nomeVar[256];
+    int isVetor = 0;
+    int tamanho = 1;
+
+    strncpy(nomeVar, currentToken.lexeme, sizeof(nomeVar));
+    nomeVar[sizeof(nomeVar) - 1] = '\0';
 
     expect(TOKEN_ID);
-    printf("[DECL_VAR] Reconhecida variável: %s\n", id_lexeme);
+    printf("[DECL_VAR] Reconhecida variável: %s\n", nomeVar);
 
     if (currentToken.type == TOKEN_LBRACK) {
+        isVetor = 1;
         advance();
         if (currentToken.type == TOKEN_INTCON) {
-            printf("[DECL_VAR] Vetor de tamanho: %s\n", currentToken.lexeme);
+            tamanho = atoi(currentToken.lexeme);
+            printf("[DECL_VAR] Vetor de tamanho: %d\n", tamanho);
             advance();
             expect(TOKEN_RBRACK);
         } else {
             erro("Esperado número inteiro dentro dos colchetes");
         }
     }
+
+    registrarVariavelGlobal(tipo, nomeVar, isVetor, tamanho);
 }
+
 
 // tipo ::= char | int | float | bool 
 void parseTipo() {
@@ -625,12 +659,12 @@ void parseTipoParam() {
 }
 
 // Lista de variáveis tipo v1, v2, v3;
-void parseDeclVarLista() {
-    parseDeclVar(); // primeiro já consumido id
+void parseDeclVarLista(const char* tipo, Escopo escopo) {
+    parseDeclVar(tipo, ESC_GLOBAL); // primeiro já consumido id
 
     while (currentToken.type == TOKEN_COMMA) {
         advance(); // consome ','
-        parseDeclVar(); // próximo id
+        parseDeclVar(tipo, ESC_GLOBAL); // próximo id
     }
 }
 
@@ -651,4 +685,14 @@ int isComandoInicio(TokenType t) {
     return t == TOKEN_KEYWORD_IF || t == TOKEN_KEYWORD_WHILE ||
            t == TOKEN_KEYWORD_RETURN || t == TOKEN_LBRACE ||
            t == TOKEN_ID || t == TOKEN_SEMICOLON;
+}
+
+void obterTipoString(char* dest) {
+    switch (currentToken.type) {
+        case TOKEN_KEYWORD_INT:   strcpy(dest, "int"); break;
+        case TOKEN_KEYWORD_FLOAT: strcpy(dest, "float"); break;
+        case TOKEN_KEYWORD_CHAR:  strcpy(dest, "char"); break;
+        case TOKEN_KEYWORD_BOOL:  strcpy(dest, "bool"); break;
+        default: strcpy(dest, "???"); break;
+    }
 }

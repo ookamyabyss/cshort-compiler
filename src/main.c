@@ -18,7 +18,13 @@ int main(int argc, char* argv[]) {
 
     // Aqui antes era só o analisador léxico. Agora chamamos o parser completo:
     startParser(f);
-    imprimirTabela();     // imprime a tabela no fim
+    //imprimirTabela();     // imprime a tabela no fim
+
+    //inserirSimbolo("x", "int", CLASSE_VAR, ESC_GLOBAL, 1);
+    //inserirSimbolo("vet", "int", CLASSE_VETOR, ESC_GLOBAL, 10);
+    //inserirSimbolo("soma", "int", CLASSE_FUNCAO, ESC_GLOBAL, 0);
+    imprimirTabela();
+
 
     fclose(f);
     return 0;

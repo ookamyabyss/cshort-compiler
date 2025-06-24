@@ -1,7 +1,15 @@
-int soma(int x, int y);
-void imprime();
-char letra(char c);
-float media(int v[], int n);
-bool ehMaior(int a, int b) {
-    return a > b;
+int funcao1(int a, float &b, char vet[]) {
+    return a;
+}
+
+void funcao2(bool &flags, int lista[], float c) {
+    return;
+}
+
+int funcao3(char x) {
+    return x;
+}
+
+void funcao4(void) {
+    return;
 }

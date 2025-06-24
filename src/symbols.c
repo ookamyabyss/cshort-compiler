@@ -2,6 +2,9 @@
 #include <string.h>
 #include "symbols.h"
 
+Simbolo tabelaSimbolos[MAX_SIMBOLOS];
+int numSimbolos = 0;
+
 // Tabela de símbolos implementada como array sequencial
 static Simbolo tabela[MAX_TABELA];
 static int nSimbolos = 0;
@@ -90,3 +93,18 @@ void registrarVariavelGlobal(const char* tipo, const char* nome, int isVetor, in
 void registrarFuncao(const char* tipo, const char* nome) {
     inserirSimbolo(nome, tipo, CLASSE_FUNCAO, ESC_GLOBAL, 0);
 }
+
+void registrarParametro(const char* tipo, const char* nome, Classe classe) {
+    int tamanho = (classe == CLASSE_VETOR) ? 0 : 1;
+    if (!inserirSimbolo(nome, tipo, classe, ESC_LOCAL, tamanho)) {
+        fprintf(stderr, "Erro ao registrar parâmetro: %s\n", nome);
+    } else {
+        printf("[TABELA] Registrado parâmetro: %s | Tipo: %s | Classe: %s\n",
+               nome, tipo,
+               classe == CLASSE_PARAM ? "param" :
+               classe == CLASSE_VETOR ? "vetor param" :
+               classe == CLASSE_VAR   ? "var" :
+               "desconhecida");
+    }
+}
+

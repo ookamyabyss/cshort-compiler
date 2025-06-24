@@ -18,6 +18,7 @@ static Token pushedToken;      // Token empurrado manualmente
 static int hasPushedToken = 0;
 static bool tokenBack = false;
 
+
 void obterTipoString(char* dest);
 
 // ==============================
@@ -621,6 +622,8 @@ void parseTipoParam() {
         erro("Esperado tipo (int, char, float, bool) no parâmetro");
     }
 
+    char tipoStr[10];                  // ← Captura o tipo ANTES de consumir
+    obterTipoString(tipoStr);
     advance(); // consome o tipo
 
     // Verifica se é '&' (um único token do tipo TOKEN_AND)
@@ -650,11 +653,17 @@ void parseTipoParam() {
 
     // Imprime o tipo de parâmetro detectado
     if (porReferencia) {
+        
         printf("[PARAM] Parâmetro por referência: &%s\n", nome);
+        registrarParametro(tipoStr, nome, CLASSE_PARAM);
     } else if (isVetor) {
+        
         printf("[PARAM] Parâmetro vetor: %s[]\n", nome);
+        registrarParametro(tipoStr, nome, CLASSE_VETOR);
     } else {
+        
         printf("[PARAM] Parâmetro comum: %s\n", nome);
+        registrarParametro(tipoStr, nome, CLASSE_PARAM);
     }
 }
 

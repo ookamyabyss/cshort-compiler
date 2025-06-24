@@ -3,6 +3,9 @@
 
 #define MAX_TABELA 1000
 
+#define MAX_SIMBOLOS 1024
+
+
 // Escopo possível de um símbolo
 typedef enum {
     ESC_GLOBAL,
@@ -26,6 +29,10 @@ typedef struct {
     int tamanho;       // 1 (var), >1 (vetor), 0 (função ou parâmetro por referência)
 } Simbolo;
 
+extern Simbolo tabelaSimbolos[MAX_SIMBOLOS];
+extern int numSimbolos;
+
+
 // Interface pública da tabela de símbolos
 void inicializarTabela();
 int inserirSimbolo(const char* nome, const char* tipo, Classe classe, Escopo escopo, int tamanho);
@@ -37,5 +44,7 @@ void imprimirTabela();             // debug: imprime todos os símbolos
 void registrarVariavelGlobal(const char* tipo, const char* nome, int isVetor, int tamanho);
 
 void registrarFuncao(const char* tipo, const char* nome);
+
+void registrarParametro(const char* tipo, const char* nome, Classe classe);
 
 #endif

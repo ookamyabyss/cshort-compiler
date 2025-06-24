@@ -142,6 +142,7 @@ void parseDecl() {
 
             if (currentToken.type == TOKEN_LPAREN) {
                 // função com tipo
+                registrarFuncao(tipoStr, nomeFunc);
                 printf("[DECL_FUNCAO] Função com tipo reconhecida: %s\n", nomeFunc);
                 advance();
                 parseTiposParam();
@@ -223,7 +224,7 @@ void parseDecl() {
 
         expect(TOKEN_ID);
         printf("[DECL_FUNCAO_VOID] Função void reconhecida: %s\n", nomeFunc);
-        
+        registrarFuncao("void", nomeFunc);
         expect(TOKEN_LPAREN);
         parseTiposParam();
         expect(TOKEN_RPAREN);
@@ -277,7 +278,6 @@ void parseDeclVar(const char* tipo, Escopo escopo) {
 
     registrarVariavelGlobal(tipo, nomeVar, isVetor, tamanho);
 }
-
 
 // tipo ::= char | int | float | bool 
 void parseTipo() {
@@ -687,6 +687,9 @@ int isComandoInicio(TokenType t) {
            t == TOKEN_ID || t == TOKEN_SEMICOLON;
 }
 
+// ==============================
+// SIMBOLOS FUNC AUXILIARES
+// ==============================
 void obterTipoString(char* dest) {
     switch (currentToken.type) {
         case TOKEN_KEYWORD_INT:   strcpy(dest, "int"); break;

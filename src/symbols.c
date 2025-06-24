@@ -86,3 +86,7 @@ void registrarVariavelGlobal(const char* tipo, const char* nome, int isVetor, in
         fprintf(stderr, "Erro ao registrar variável global: %s\n", nome);
     }
 }
+
+void registrarFuncao(const char* tipo, const char* nome) {
+    inserirSimbolo(nome, tipo, CLASSE_FUNCAO, ESC_GLOBAL, 0);
+}

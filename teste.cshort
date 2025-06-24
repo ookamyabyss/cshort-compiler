@@ -5,3 +5,10 @@ float b[5];
 char c, d[10], e;
 
 
+int soma(int a, int b) {
+    return a + b;
+}
+
+void imprime() {
+    return;
+}

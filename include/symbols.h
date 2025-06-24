@@ -36,5 +36,6 @@ void imprimirTabela();             // debug: imprime todos os símbolos
 // Função utilitária para parser registrar variáveis globais
 void registrarVariavelGlobal(const char* tipo, const char* nome, int isVetor, int tamanho);
 
+void registrarFuncao(const char* tipo, const char* nome);
 
 #endif

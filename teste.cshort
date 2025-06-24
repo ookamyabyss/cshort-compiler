@@ -1,14 +1,7 @@
-int a;
-
-float b[5];
-
-char c, d[10], e;
-
-
-int soma(int a, int b) {
-    return a + b;
-}
-
-void imprime() {
-    return;
+int soma(int x, int y);
+void imprime();
+char letra(char c);
+float media(int v[], int n);
+bool ehMaior(int a, int b) {
+    return a > b;
 }

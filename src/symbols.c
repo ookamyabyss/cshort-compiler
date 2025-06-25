@@ -108,3 +108,9 @@ void registrarParametro(const char* tipo, const char* nome, Classe classe) {
     }
 }
 
+void registrarVariavelLocal(const char* tipo, const char* nome, int isVetor, int tamanho) {
+    Classe classe = isVetor ? CLASSE_VETOR : CLASSE_VAR;
+    if (!inserirSimbolo(nome, tipo, classe, ESC_LOCAL, isVetor ? tamanho : 1)) {
+        fprintf(stderr, "Erro ao registrar variável local: %s\n", nome);
+    } 
+}

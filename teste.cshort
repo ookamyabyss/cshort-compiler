@@ -1,15 +1,17 @@
-int funcao1(int a, float &b, char vet[]) {
+int a;
+
+float b;
+
+char c;
+
+bool flag;
+
+int matriz[3][4]; 
+
+int funcao1(int a) {
     return a;
 }
 
-void funcao2(bool &flags, int lista[], float c) {
-    return;
-}
-
-int funcao3(char x) {
-    return x;
-}
-
-void funcao4(void) {
-    return;
+int func() {
+    int a;
 }

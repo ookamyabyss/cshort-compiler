@@ -319,9 +319,11 @@ void parseFunc() {
     match(TOKEN_LBRACE);
 
     while (isTipo(currentToken.type)) {
+        char tipoStr[10];
+        obterTipoString(tipoStr);  // ← Isso obtém o tipo em string
         parseTipo();
-        parseDeclVarPrimeiro();
-        parseDeclVarResto();
+        parseDeclVarPrimeiro(tipoStr, ESC_LOCAL);
+        parseDeclVarResto(tipoStr, ESC_LOCAL);
         expect(TOKEN_SEMICOLON);
     }
 
@@ -563,12 +565,15 @@ void parseFator() {
 // ==============================
 
 // Primeira variável da lista
-void parseDeclVarPrimeiro() {
+void parseDeclVarPrimeiro(const char* tipo, Escopo escopo) {
     if (currentToken.type != TOKEN_ID) {
         erro("Esperado identificador na declaração de variável");
     }
 
     char nome[256];
+    int isVetor = 0;
+    int tamanho = 1;
+
     strncpy(nome, currentToken.lexeme, sizeof(nome));
     nome[sizeof(nome) - 1] = '\0';
     advance(); // consome o ID
@@ -578,6 +583,8 @@ void parseDeclVarPrimeiro() {
     if (currentToken.type == TOKEN_LBRACK) {
         advance();
         if (currentToken.type == TOKEN_INTCON) {
+            isVetor = 1;
+            tamanho = atoi(currentToken.lexeme);
             printf("[DECL_VAR] Vetor com tamanho: %s\n", currentToken.lexeme);
             advance();
             expect(TOKEN_RBRACK);
@@ -585,10 +592,15 @@ void parseDeclVarPrimeiro() {
             erro("Esperado número inteiro dentro dos colchetes");
         }
     }
+
+    if (escopo == ESC_GLOBAL)
+        registrarVariavelGlobal(tipo, nome, isVetor, tamanho);
+    else
+        registrarVariavelLocal(tipo, nome, isVetor, tamanho);
 }
 
 // Demais variáveis após vírgula
-void parseDeclVarResto() {
+void parseDeclVarResto(const char* tipo, Escopo escopo) {
     while (currentToken.type == TOKEN_COMMA) {
         advance(); // consome ','
 
@@ -597,6 +609,9 @@ void parseDeclVarResto() {
         }
 
         char nome[256];
+        int isVetor = 0;
+        int tamanho = 1;
+
         strncpy(nome, currentToken.lexeme, sizeof(nome));
         nome[sizeof(nome) - 1] = '\0';
         advance(); // consome o ID
@@ -606,6 +621,8 @@ void parseDeclVarResto() {
         if (currentToken.type == TOKEN_LBRACK) {
             advance();
             if (currentToken.type == TOKEN_INTCON) {
+                isVetor = 1;
+                tamanho = atoi(currentToken.lexeme);
                 printf("[DECL_VAR] Vetor de tamanho: %s\n", currentToken.lexeme);
                 advance();
                 expect(TOKEN_RBRACK);
@@ -613,6 +630,12 @@ void parseDeclVarResto() {
                 erro("Esperado número inteiro dentro dos colchetes");
             }
         }
+
+        if (escopo == ESC_GLOBAL)
+            registrarVariavelGlobal(tipo, nome, isVetor, tamanho);
+        else
+            registrarVariavelLocal(tipo, nome, isVetor, tamanho);
+
     }
 }
 

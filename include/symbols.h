@@ -47,4 +47,6 @@ void registrarFuncao(const char* tipo, const char* nome);
 
 void registrarParametro(const char* tipo, const char* nome, Classe classe);
 
+void registrarVariavelLocal(const char* tipo, const char* nome, int isVetor, int tamanho);
+
 #endif

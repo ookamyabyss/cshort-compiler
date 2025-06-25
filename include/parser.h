@@ -39,8 +39,8 @@ void parseFator(void);        // fator ::= id[...] | constantes | chamada | (!fa
 // ==============================
 
 void parseTipoParam(void);            // tipo (id | &id | id[])
-void parseDeclVarPrimeiro(void);      // primeira variável da lista
-void parseDeclVarResto(void);         // demais variáveis após vírgula
+void parseDeclVarPrimeiro(const char* tipo, Escopo escopo);       // primeira variável da lista
+void parseDeclVarResto(const char* tipo, Escopo escopo);         // demais variáveis após vírgula
 void parseDeclVarLista(const char* tipo, Escopo escopo);        // lista de variáveis tipo v1, v2, v3;
 
 // ==============================

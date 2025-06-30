@@ -52,10 +52,11 @@ void ungetToken(Token t) {
 // Erros
 // ==============================
 
-// Exibe erro sintático e encerra a execução.
-static void erro(const char* msg) {
-    fprintf(stderr, "[ERRO] %s na linha %d, coluna %d. Token: '%s'\n",
-            msg, currentToken.line, currentToken.column, currentToken.lexeme);
+
+// Função centralizada para reportar erros sintáticos e encerrar.
+static void parserError(const char* message) {
+    fprintf(stderr, "[ERRO SINTÁTICO] %s. Encontrado '%s' (tipo %d) na linha %d, coluna %d.\n",
+            message, currentToken.lexeme, currentToken.type, currentToken.line, currentToken.column);
     exit(EXIT_FAILURE);
 }
 
@@ -70,33 +71,6 @@ void match(int expectedType) {
     }
 }
 
-// Espera e consome um token específico (mesma função de match).
-// Usado por compatibilidade com o resto do parser
-static void expect(TokenType expected) {
-    if (currentToken.type == expected) {
-        advance();
-    } else {
-        fprintf(stderr, "[ERRO] Esperado token '%s' na linha %d, coluna %d, mas encontrado '%s'.\n",
-                tokenTypeName(expected), currentToken.line, currentToken.column, currentToken.lexeme);
-        exit(EXIT_FAILURE);
-    }
-}
-
-// Exibe erro sintático genérico.
-void syntaxError(const char* msg) {
-    fprintf(stderr, "[ERRO SINTÁTICO] %s: encontrado '%s' (linha %d, coluna %d)\n",
-            msg, currentToken.lexeme, currentToken.line, currentToken.column);
-    exit(EXIT_FAILURE);
-}
-
-// Consome token esperado, erro se não for
-void eat(int expectedTokenType) {
-    if (currentToken.type == expectedTokenType) {
-        advance();
-    } else {
-        syntaxError("Token inesperado");
-    }
-}
 
 // ==============================
 // Entrada do Parser
@@ -121,7 +95,7 @@ void parseProg() {
             // Função void
             parseDecl();
         } else {
-            erro("Esperado tipo ou void");
+            parserError("Esperado tipo ou void");
         }
     }
 }
@@ -163,7 +137,7 @@ void parseDecl() {
             } else if (currentToken.type == TOKEN_LBRACE) {
                 parseFunc();
             } else {
-                erro("Esperado ';' ou '{' após declaração de função");
+                parserError("Esperado ';' ou '{' após declaração de função");
             }
             } else {
                 // declaração variável
@@ -181,7 +155,7 @@ void parseDecl() {
                         advance();
                         expect(TOKEN_RBRACK);
                     } else {
-                        erro("Esperado número inteiro dentro dos colchetes após o identificador");
+                        parserError("Esperado número inteiro dentro dos colchetes após o identificador");
                     }
                 }
 
@@ -197,7 +171,7 @@ void parseDecl() {
                         advance(); // consome número
                         expect(TOKEN_RBRACK); // consome ']'
                     } else {
-                        erro("Esperado número inteiro dentro dos colchetes após o identificador");
+                        parserError("Esperado número inteiro dentro dos colchetes após o identificador");
                     }
                 }
 
@@ -211,7 +185,7 @@ void parseDecl() {
 
             }
         } else {
-            erro("Esperado identificador após tipo");
+            parserError("Esperado identificador após tipo");
         }
 
     } else if (currentToken.type == TOKEN_KEYWORD_VOID) {
@@ -244,11 +218,11 @@ void parseDecl() {
         } else if (currentToken.type == TOKEN_LBRACE) {
             parseFunc();
         } else {
-            erro("Esperado ';' ou '{' após declaração de função void");
+            parserError("Esperado ';' ou '{' após declaração de função void");
         }
 
     } else {
-        erro("Esperado tipo ou void na declaração");
+        parserError("Esperado tipo ou void na declaração");
     }
 }
 
@@ -273,7 +247,7 @@ void parseDeclVar(const char* tipo, Escopo escopo) {
             advance();
             expect(TOKEN_RBRACK);
         } else {
-            erro("Esperado número inteiro dentro dos colchetes");
+            parserError("Esperado número inteiro dentro dos colchetes");
         }
     }
 
@@ -285,7 +259,7 @@ void parseTipo() {
     if (isTipo(currentToken.type)) {
         advance();
     } else {
-        erro("Esperado tipo (int, float, char, bool)");
+        parserError("Esperado tipo (int, float, char, bool)");
     }
 }
 
@@ -299,7 +273,7 @@ void parseTiposParam() {
         advance();
 
         if (currentToken.type != TOKEN_RPAREN) {
-            erro("Token 'void' não pode ser seguido por outros parâmetros");
+            parserError("Token 'void' não pode ser seguido por outros parâmetros");
         }
 
         return;
@@ -436,12 +410,12 @@ void parseCmd() {
             match(TOKEN_SEMICOLON);
             return;
         } else {
-            erro("Identificador inesperado — esperada atribuição ou chamada de função");
+            parserError("Identificador inesperado — esperada atribuição ou chamada de função");
         }
 
     } else {
         printf("[CMD] Comando inválido ou não tratado: token '%s'\n", currentToken.lexeme);
-        erro("Comando não reconhecido");
+        parserError("Comando não reconhecido");
     }
 }
 
@@ -567,7 +541,7 @@ void parseFator() {
 // Primeira variável da lista
 void parseDeclVarPrimeiro(const char* tipo, Escopo escopo) {
     if (currentToken.type != TOKEN_ID) {
-        erro("Esperado identificador na declaração de variável");
+        parserError("Esperado identificador na declaração de variável");
     }
 
     char nome[256];
@@ -589,7 +563,7 @@ void parseDeclVarPrimeiro(const char* tipo, Escopo escopo) {
             advance();
             expect(TOKEN_RBRACK);
         } else {
-            erro("Esperado número inteiro dentro dos colchetes");
+            parserError("Esperado número inteiro dentro dos colchetes");
         }
     }
 
@@ -605,7 +579,7 @@ void parseDeclVarResto(const char* tipo, Escopo escopo) {
         advance(); // consome ','
 
         if (currentToken.type != TOKEN_ID) {
-            erro("Esperado identificador após ','");
+            parserError("Esperado identificador após ','");
         }
 
         char nome[256];
@@ -627,7 +601,7 @@ void parseDeclVarResto(const char* tipo, Escopo escopo) {
                 advance();
                 expect(TOKEN_RBRACK);
             } else {
-                erro("Esperado número inteiro dentro dos colchetes");
+                parserError("Esperado número inteiro dentro dos colchetes");
             }
         }
 
@@ -642,7 +616,7 @@ void parseDeclVarResto(const char* tipo, Escopo escopo) {
 // Tipo (id | &id | id[])
 void parseTipoParam() {
     if (!isTipo(currentToken.type)) {
-        erro("Esperado tipo (int, char, float, bool) no parâmetro");
+        parserError("Esperado tipo (int, char, float, bool) no parâmetro");
     }
 
     char tipoStr[10];                  // ← Captura o tipo ANTES de consumir
@@ -658,7 +632,7 @@ void parseTipoParam() {
 
     // Agora deve vir um identificador
     if (currentToken.type != TOKEN_ID) {
-        erro("Esperado identificador no parâmetro");
+        parserError("Esperado identificador no parâmetro");
     }
 
     char nome[256];

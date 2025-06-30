@@ -57,7 +57,6 @@ const char* tokenTypeName(TokenType type) {
         case TOKEN_RBRACE: return "}";
         case TOKEN_SEMICOLON: return ";";
         case TOKEN_COMMA: return ",";
-        case TOKEN_KEYWORD: return "palavra-chave";
         case TOKEN_EOF: return "EOF";
         case TOKEN_INVALID: return "inválido";
         default: return "desconhecido";

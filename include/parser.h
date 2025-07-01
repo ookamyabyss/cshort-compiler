@@ -5,7 +5,6 @@
 #include "lexer.h"
 #include "symbols.h"
 
-
 // ==============================
 // Inicialização
 // ==============================
@@ -48,15 +47,11 @@ void parseDeclVarLista(const char* tipo, Escopo escopo);        // lista de vari
 // ==============================
 
 int isTipo(TokenType t);              // verifica se t é tipo válido
-int isComandoInicio(TokenType t);     // verifica se t inicia comando
 
-void eat(int expectedTokenType);      // consome token esperado, erro se não for
-void match(int expectedType);         // consome token, erro se diferente
-void syntaxError(const char* msg);    // exibe erro sintático com mensagem
+int isComandoInicio(TokenType t);     // verifica se t inicia comando
 
 void ungetToken(Token t);             // "devolve" token ao fluxo léxico
 
-
-
+void parseEat(int expectedType);     // consome token, erro se diferente
 
 #endif // PARSER_H

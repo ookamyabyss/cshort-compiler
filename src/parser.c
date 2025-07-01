@@ -7,7 +7,6 @@
 #include "lexer.h"
 #include "symbols.h"
 
-
 // ==============================
 // Variáveis globais
 // ==============================
@@ -17,7 +16,6 @@ static Token backupToken;      // Token salvo para "voltar"
 static Token pushedToken;      // Token empurrado manualmente
 static int hasPushedToken = 0;
 static bool tokenBack = false;
-
 
 void obterTipoString(char* dest);
 
@@ -52,49 +50,21 @@ void ungetToken(Token t) {
 // Erros
 // ==============================
 
-// Exibe erro sintático e encerra a execução.
-static void erro(const char* msg) {
-    fprintf(stderr, "[ERRO] %s na linha %d, coluna %d. Token: '%s'\n",
-            msg, currentToken.line, currentToken.column, currentToken.lexeme);
+// Função para reportar erros sintáticos e encerrar.
+static void parseError(const char* message) {
+    fprintf(stderr, "[ERRO SINTÁTICO] %s. Encontrado '%s' (tipo %d) na linha %d, coluna %d.\n",
+            message, currentToken.lexeme, currentToken.type, currentToken.line, currentToken.column);
     exit(EXIT_FAILURE);
 }
 
 // Espera e consome um token do tipo esperado.
-void match(int expectedType) {
+void parseEat(int expectedType) {
     if (currentToken.type == expectedType) {
         advance();
     } else {
         fprintf(stderr, "[ERRO SINTÁTICO] Esperado token do tipo %d, mas encontrado '%s' (linha %d, coluna %d)\n",
                 expectedType, currentToken.lexeme, currentToken.line, currentToken.column);
-        exit(EXIT_FAILURE); // encerra o programa, mas você pode adaptar para recuperação de erro
-    }
-}
-
-// Espera e consome um token específico (mesma função de match).
-// Usado por compatibilidade com o resto do parser
-static void expect(TokenType expected) {
-    if (currentToken.type == expected) {
-        advance();
-    } else {
-        fprintf(stderr, "[ERRO] Esperado token '%s' na linha %d, coluna %d, mas encontrado '%s'.\n",
-                tokenTypeName(expected), currentToken.line, currentToken.column, currentToken.lexeme);
-        exit(EXIT_FAILURE);
-    }
-}
-
-// Exibe erro sintático genérico.
-void syntaxError(const char* msg) {
-    fprintf(stderr, "[ERRO SINTÁTICO] %s: encontrado '%s' (linha %d, coluna %d)\n",
-            msg, currentToken.lexeme, currentToken.line, currentToken.column);
-    exit(EXIT_FAILURE);
-}
-
-// Consome token esperado, erro se não for
-void eat(int expectedTokenType) {
-    if (currentToken.type == expectedTokenType) {
-        advance();
-    } else {
-        syntaxError("Token inesperado");
+        exit(EXIT_FAILURE); // encerra o programa.
     }
 }
 
@@ -121,7 +91,7 @@ void parseProg() {
             // Função void
             parseDecl();
         } else {
-            erro("Esperado tipo ou void");
+            parseError("Esperado tipo ou void");
         }
     }
 }
@@ -147,15 +117,15 @@ void parseDecl() {
                 printf("[DECL_FUNCAO] Função com tipo reconhecida: %s\n", nomeFunc);
                 advance();
                 parseTiposParam();
-                expect(TOKEN_RPAREN);
+                parseEat(TOKEN_RPAREN);
 
                 while (currentToken.type == TOKEN_COMMA) {
                     advance();
-                    expect(TOKEN_ID);
+                    parseEat(TOKEN_ID);
                     printf("[DECL_FUNCAO] Função adicional reconhecida: %s\n", currentToken.lexeme);
-                    expect(TOKEN_LPAREN);
+                    parseEat(TOKEN_LPAREN);
                     parseTiposParam();
-                    expect(TOKEN_RPAREN);
+                    parseEat(TOKEN_RPAREN);
                 }
 
             if (currentToken.type == TOKEN_SEMICOLON) {
@@ -163,7 +133,7 @@ void parseDecl() {
             } else if (currentToken.type == TOKEN_LBRACE) {
                 parseFunc();
             } else {
-                erro("Esperado ';' ou '{' após declaração de função");
+                parseError("Esperado ';' ou '{' após declaração de função");
             }
             } else {
                 // declaração variável
@@ -179,9 +149,9 @@ void parseDecl() {
                         isVetor = 1;
                         printf("[DECL_VAR] Vetor de tamanho: %s\n", currentToken.lexeme);
                         advance();
-                        expect(TOKEN_RBRACK);
+                        parseEat(TOKEN_RBRACK);
                     } else {
-                        erro("Esperado número inteiro dentro dos colchetes após o identificador");
+                        parseError("Esperado número inteiro dentro dos colchetes após o identificador");
                     }
                 }
 
@@ -195,9 +165,9 @@ void parseDecl() {
                     if (currentToken.type == TOKEN_INTCON) {
                         printf("[DECL_VAR] Vetor de tamanho: %s\n", currentToken.lexeme);
                         advance(); // consome número
-                        expect(TOKEN_RBRACK); // consome ']'
+                        parseEat(TOKEN_RBRACK); // consome ']'
                     } else {
-                        erro("Esperado número inteiro dentro dos colchetes após o identificador");
+                        parseError("Esperado número inteiro dentro dos colchetes após o identificador");
                     }
                 }
 
@@ -207,15 +177,15 @@ void parseDecl() {
                     parseDeclVar(tipoStr, ESC_GLOBAL); // consome próximo id e vetor se tiver
                 }
 
-                expect(TOKEN_SEMICOLON);
+                parseEat(TOKEN_SEMICOLON);
 
             }
         } else {
-            erro("Esperado identificador após tipo");
+            parseError("Esperado identificador após tipo");
         }
 
     } else if (currentToken.type == TOKEN_KEYWORD_VOID) {
-        expect(TOKEN_KEYWORD_VOID);
+        parseEat(TOKEN_KEYWORD_VOID);
 
         char nomeFunc[256];
         if (currentToken.type == TOKEN_ID) {
@@ -223,20 +193,20 @@ void parseDecl() {
             nomeFunc[sizeof(nomeFunc) - 1] = '\0';
         }
 
-        expect(TOKEN_ID);
+        parseEat(TOKEN_ID);
         printf("[DECL_FUNCAO_VOID] Função void reconhecida: %s\n", nomeFunc);
         registrarFuncao("void", nomeFunc);
-        expect(TOKEN_LPAREN);
+        parseEat(TOKEN_LPAREN);
         parseTiposParam();
-        expect(TOKEN_RPAREN);
+        parseEat(TOKEN_RPAREN);
 
         while (currentToken.type == TOKEN_COMMA) {
             advance();
-            expect(TOKEN_ID);
+            parseEat(TOKEN_ID);
             printf("[DECL_FUNCAO_VOID] Função void adicional: %s\n", currentToken.lexeme);
-            expect(TOKEN_LPAREN);
+            parseEat(TOKEN_LPAREN);
             parseTiposParam();
-            expect(TOKEN_RPAREN);
+            parseEat(TOKEN_RPAREN);
         }
 
         if (currentToken.type == TOKEN_SEMICOLON) {
@@ -244,11 +214,11 @@ void parseDecl() {
         } else if (currentToken.type == TOKEN_LBRACE) {
             parseFunc();
         } else {
-            erro("Esperado ';' ou '{' após declaração de função void");
+            parseError("Esperado ';' ou '{' após declaração de função void");
         }
 
     } else {
-        erro("Esperado tipo ou void na declaração");
+        parseError("Esperado tipo ou void na declaração");
     }
 }
 
@@ -261,7 +231,7 @@ void parseDeclVar(const char* tipo, Escopo escopo) {
     strncpy(nomeVar, currentToken.lexeme, sizeof(nomeVar));
     nomeVar[sizeof(nomeVar) - 1] = '\0';
 
-    expect(TOKEN_ID);
+    parseEat(TOKEN_ID);
     printf("[DECL_VAR] Reconhecida variável: %s\n", nomeVar);
 
     if (currentToken.type == TOKEN_LBRACK) {
@@ -271,9 +241,9 @@ void parseDeclVar(const char* tipo, Escopo escopo) {
             tamanho = atoi(currentToken.lexeme);
             printf("[DECL_VAR] Vetor de tamanho: %d\n", tamanho);
             advance();
-            expect(TOKEN_RBRACK);
+            parseEat(TOKEN_RBRACK);
         } else {
-            erro("Esperado número inteiro dentro dos colchetes");
+            parseError("Esperado número inteiro dentro dos colchetes");
         }
     }
 
@@ -285,7 +255,7 @@ void parseTipo() {
     if (isTipo(currentToken.type)) {
         advance();
     } else {
-        erro("Esperado tipo (int, float, char, bool)");
+        parseError("Esperado tipo (int, float, char, bool)");
     }
 }
 
@@ -299,7 +269,7 @@ void parseTiposParam() {
         advance();
 
         if (currentToken.type != TOKEN_RPAREN) {
-            erro("Token 'void' não pode ser seguido por outros parâmetros");
+            parseError("Token 'void' não pode ser seguido por outros parâmetros");
         }
 
         return;
@@ -309,14 +279,14 @@ void parseTiposParam() {
 
     while (currentToken.type == TOKEN_COMMA) {
         advance();
-        parseTipoParam();  // aqui estava o erro
+        parseTipoParam();  
     }
 }
 
 // func ::= tipo/void id(...) '{' {decl_var} {cmd} '}' 
 void parseFunc() {
 
-    match(TOKEN_LBRACE);
+    parseEat(TOKEN_LBRACE);
 
     while (isTipo(currentToken.type)) {
         char tipoStr[10];
@@ -324,14 +294,14 @@ void parseFunc() {
         parseTipo();
         parseDeclVarPrimeiro(tipoStr, ESC_LOCAL);
         parseDeclVarResto(tipoStr, ESC_LOCAL);
-        expect(TOKEN_SEMICOLON);
+        parseEat(TOKEN_SEMICOLON);
     }
 
     while (currentToken.type != TOKEN_RBRACE && currentToken.type != TOKEN_EOF) {
         parseCmd();
     }
 
-    match(TOKEN_RBRACE);
+    parseEat(TOKEN_RBRACE);
 }
 
 // cmd ::= if, while, for, return, atrib, chamada, bloco, ';'
@@ -340,9 +310,9 @@ void parseCmd() {
         printf("[CMD] Reconhecido comando 'if'\n");
         advance();
 
-        match(TOKEN_LPAREN);
+        parseEat(TOKEN_LPAREN);
         parseExpr();
-        match(TOKEN_RPAREN);
+        parseEat(TOKEN_RPAREN);
 
         parseCmd();
 
@@ -356,9 +326,9 @@ void parseCmd() {
         printf("[CMD] Reconhecido comando 'while'\n");
         advance();
 
-        match(TOKEN_LPAREN);
+        parseEat(TOKEN_LPAREN);
         parseExpr();
-        match(TOKEN_RPAREN);
+        parseEat(TOKEN_RPAREN);
 
         parseCmd();
 
@@ -366,22 +336,22 @@ void parseCmd() {
         printf("[CMD] Reconhecido comando 'for'\n");
         advance();
 
-        match(TOKEN_LPAREN);
+        parseEat(TOKEN_LPAREN);
 
         if (currentToken.type == TOKEN_ID) {
             parseAtrib();
         }
-        match(TOKEN_SEMICOLON);
+        parseEat(TOKEN_SEMICOLON);
 
         if (currentToken.type != TOKEN_SEMICOLON) {
             parseExpr();
         }
-        match(TOKEN_SEMICOLON);
+        parseEat(TOKEN_SEMICOLON);
 
         if (currentToken.type == TOKEN_ID) {
             parseAtrib();
         }
-        match(TOKEN_RPAREN);
+        parseEat(TOKEN_RPAREN);
 
         parseCmd();
 
@@ -393,7 +363,7 @@ void parseCmd() {
             parseExpr();
         }
 
-        match(TOKEN_SEMICOLON);
+        parseEat(TOKEN_SEMICOLON);
 
     } else if (currentToken.type == TOKEN_LBRACE) {
         printf("[CMD] Bloco composto reconhecido\n");
@@ -402,7 +372,7 @@ void parseCmd() {
         while (currentToken.type != TOKEN_RBRACE && currentToken.type != TOKEN_EOF) {
             parseCmd();
         }
-        match(TOKEN_RBRACE);
+        parseEat(TOKEN_RBRACE);
 
     } else if (currentToken.type == TOKEN_SEMICOLON) {
         printf("[CMD] Comando vazio reconhecido\n");
@@ -414,14 +384,14 @@ void parseCmd() {
 
         if (lookahead.type == TOKEN_ASSIGN || lookahead.type == TOKEN_LBRACK) {
             parseAtrib();
-            match(TOKEN_SEMICOLON);
+            parseEat(TOKEN_SEMICOLON);
             return;
 
         } else if (lookahead.type == TOKEN_LPAREN) {
             // chamada de função como comando
             printf("[CMD] Chamada de função reconhecida: %s\n", currentToken.lexeme);
             advance(); // consome id
-            match(TOKEN_LPAREN);
+            parseEat(TOKEN_LPAREN);
 
             if (currentToken.type != TOKEN_RPAREN) {
                 parseExpr();
@@ -432,23 +402,23 @@ void parseCmd() {
                 }
             }
 
-            match(TOKEN_RPAREN);
-            match(TOKEN_SEMICOLON);
+            parseEat(TOKEN_RPAREN);
+            parseEat(TOKEN_SEMICOLON);
             return;
         } else {
-            erro("Identificador inesperado — esperada atribuição ou chamada de função");
+            parseError("Identificador inesperado — esperada atribuição ou chamada de função");
         }
 
     } else {
         printf("[CMD] Comando inválido ou não tratado: token '%s'\n", currentToken.lexeme);
-        erro("Comando não reconhecido");
+        parseError("Comando não reconhecido");
     }
 }
 
 // atrib ::= id [ '[' expr ']' ] = expr
 void parseAtrib() {
     if (currentToken.type != TOKEN_ID) {
-        syntaxError("Esperado identificador no início da atribuição");
+        parseError("Esperado identificador no início da atribuição");
         return;
     }
 
@@ -460,10 +430,10 @@ void parseAtrib() {
         printf("[ATRIB] Índice de vetor detectado\n");
         advance();  // consome '['
         parseExpr();
-        match(TOKEN_RBRACK);  // consome ']'
+        parseEat(TOKEN_RBRACK);  // consome ']'
     }
 
-    match(TOKEN_ASSIGN);  // consome '='
+    parseEat(TOKEN_ASSIGN);  // consome '='
     parseExpr();          // processa o lado direito da atribuição
 
     printf("[ATRIB] Atribuição completa reconhecida\n");
@@ -522,7 +492,7 @@ void parseFator() {
         if (currentToken.type == TOKEN_LBRACK) {
             advance();
             parseExpr();
-            eat(TOKEN_RBRACK);
+            parseEat(TOKEN_RBRACK);
         }
         else if (currentToken.type == TOKEN_LPAREN) {
             advance();
@@ -533,7 +503,7 @@ void parseFator() {
                     parseExpr();
                 }
             }
-            eat(TOKEN_RPAREN);
+            parseEat(TOKEN_RPAREN);
         }
 
         printf("[EXPR] Fator reconhecido: %s\n", idToken.lexeme);
@@ -549,14 +519,14 @@ void parseFator() {
     else if (currentToken.type == TOKEN_LPAREN) {
         advance();
         parseExpr();
-        eat(TOKEN_RPAREN);
+        parseEat(TOKEN_RPAREN);
     }
     else if (strcmp(currentToken.lexeme, "!") == 0) {
         advance();
         parseFator();
     }
     else {
-        syntaxError("Fator inválido");
+        parseError("Fator inválido");
     }
 }
 
@@ -567,7 +537,7 @@ void parseFator() {
 // Primeira variável da lista
 void parseDeclVarPrimeiro(const char* tipo, Escopo escopo) {
     if (currentToken.type != TOKEN_ID) {
-        erro("Esperado identificador na declaração de variável");
+        parseError("Esperado identificador na declaração de variável");
     }
 
     char nome[256];
@@ -587,9 +557,9 @@ void parseDeclVarPrimeiro(const char* tipo, Escopo escopo) {
             tamanho = atoi(currentToken.lexeme);
             printf("[DECL_VAR] Vetor com tamanho: %s\n", currentToken.lexeme);
             advance();
-            expect(TOKEN_RBRACK);
+            parseEat(TOKEN_RBRACK);
         } else {
-            erro("Esperado número inteiro dentro dos colchetes");
+            parseError("Esperado número inteiro dentro dos colchetes");
         }
     }
 
@@ -605,7 +575,7 @@ void parseDeclVarResto(const char* tipo, Escopo escopo) {
         advance(); // consome ','
 
         if (currentToken.type != TOKEN_ID) {
-            erro("Esperado identificador após ','");
+            parseError("Esperado identificador após ','");
         }
 
         char nome[256];
@@ -625,9 +595,9 @@ void parseDeclVarResto(const char* tipo, Escopo escopo) {
                 tamanho = atoi(currentToken.lexeme);
                 printf("[DECL_VAR] Vetor de tamanho: %s\n", currentToken.lexeme);
                 advance();
-                expect(TOKEN_RBRACK);
+                parseEat(TOKEN_RBRACK);
             } else {
-                erro("Esperado número inteiro dentro dos colchetes");
+                parseError("Esperado número inteiro dentro dos colchetes");
             }
         }
 
@@ -642,7 +612,7 @@ void parseDeclVarResto(const char* tipo, Escopo escopo) {
 // Tipo (id | &id | id[])
 void parseTipoParam() {
     if (!isTipo(currentToken.type)) {
-        erro("Esperado tipo (int, char, float, bool) no parâmetro");
+        parseError("Esperado tipo (int, char, float, bool) no parâmetro");
     }
 
     char tipoStr[10];                  // ← Captura o tipo ANTES de consumir
@@ -658,7 +628,7 @@ void parseTipoParam() {
 
     // Agora deve vir um identificador
     if (currentToken.type != TOKEN_ID) {
-        erro("Esperado identificador no parâmetro");
+        parseError("Esperado identificador no parâmetro");
     }
 
     char nome[256];
@@ -670,7 +640,7 @@ void parseTipoParam() {
     int isVetor = 0;
     if (currentToken.type == TOKEN_LBRACK) {
         advance();
-        expect(TOKEN_RBRACK);
+        parseEat(TOKEN_RBRACK);
         isVetor = 1;
     }
 

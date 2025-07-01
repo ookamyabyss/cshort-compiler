@@ -14,7 +14,6 @@ typedef enum {
     TOKEN_CHARCON_N,   // Constante de caractere '\n'
     TOKEN_CHARCON_0,   // Constante de caractere '\0'
     TOKEN_STRINGCON,   // Constante string
-    TOKEN_COMMENT,     // Comentário
 
     // Operadores aritméticos
     TOKEN_PLUS,       // +
@@ -44,9 +43,6 @@ typedef enum {
     TOKEN_SEMICOLON,  // ;
     TOKEN_COMMA,      // ,
 
-    // Palavra-chave (verificada depois)
-    TOKEN_KEYWORD,
-
     // Palavras-chave específicas
     TOKEN_KEYWORD_INT,
     TOKEN_KEYWORD_CHAR,
@@ -70,22 +66,6 @@ typedef enum {
     TOKEN_EOF,
     TOKEN_INVALID
 } TokenType;
-
-// Subcategorias opcionais para operadores
-typedef enum {
-    OP_PLUS,
-    OP_MINUS,
-    OP_MUL,
-    OP_DIV,
-    OP_ASSIGN,
-    OP_EQ,
-    OP_NEQ,
-    OP_LT,
-    OP_GT,
-    OP_LEQ,
-    OP_GEQ,
-    OP_AND
-} OperatorType;
 
 // Estrutura principal de um token
 typedef struct {

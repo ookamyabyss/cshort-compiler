@@ -2,16 +2,6 @@ int a;
 
 float b;
 
-char c;
-
-bool flag;
-
-int matriz[3][4]; 
-
-int funcao1(int a) {
-    return a;
-}
-
 int func() {
     int a;
 }

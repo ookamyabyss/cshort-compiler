@@ -302,6 +302,7 @@ void parseFunc() {
     }
 
     parseEat(TOKEN_RBRACE);
+    limparEscopo(ESC_LOCAL);
 }
 
 // cmd ::= if, while, for, return, atrib, chamada, bloco, ';'

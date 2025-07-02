@@ -1,7 +1,11 @@
-int a;
+int x;         
+int y[5];      
 
-float b;
-
-int func() {
+int foo() {
     int a;
+    char b[10], c;
+
+    return a;
 }
+
+int z;         

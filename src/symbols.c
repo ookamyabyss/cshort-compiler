@@ -37,24 +37,47 @@ int inserirSimbolo(const char* nome, const char* tipo, Classe classe, Escopo esc
     tabela[nSimbolos].escopo = escopo;
     tabela[nSimbolos].tamanho = tamanho;
 
+    // Todo novo símbolo inserido começa como ATIVO
+    tabela[nSimbolos].estado = ESTADO_VIVO;
+
     nSimbolos++;
     return 1;  // sucesso
 }
 
 // Busca símbolo por nome e escopo exato (útil para inserção e resolução)
 Simbolo* buscarSimbolo(const char* nome, Escopo escopo) {
+    // --- ALTERADO ---
+    // A busca agora ignora zumbis e respeita o sombreamento de escopo.
+    // O parâmetro 'escopo' indica de ONDE a busca se origina.
     for (int i = nSimbolos - 1; i >= 0; i--) {
-        if (strcmp(tabela[i].nome, nome) == 0 && tabela[i].escopo == escopo) {
-            return &tabela[i];
+        // Verifica se o nome bate E se o símbolo está ativo
+        if (strcmp(tabela[i].nome, nome) == 0 && tabela[i].estado == ESTADO_VIVO) {
+            // Se encontrou um símbolo ativo com o nome certo, ele é um candidato.
+            // Se a busca partiu de um escopo local, qualquer símbolo encontrado (local ou global) é válido.
+            // Se a busca partiu de um escopo global, apenas um símbolo global é válido.
+            if (escopo == ESC_LOCAL) {
+                return &tabela[i]; // Retorna o primeiro ativo que encontrar (o mais interno)
+            } else if (escopo == ESC_GLOBAL && tabela[i].escopo == ESC_GLOBAL) {
+                return &tabela[i]; // Encontrou um global, como pedido
+            }
         }
     }
-    return NULL;
+    return NULL; 
 }
 
-// Remove símbolos com escopo local (quando sair de uma função)
 void limparEscopo(Escopo escopo) {
-    while (nSimbolos > 0 && tabela[nSimbolos - 1].escopo == escopo) {
-        nSimbolos--;
+
+    if (escopo == ESC_LOCAL) {
+        for (int i = nSimbolos - 1; i >= 0; i--) {
+            // Para quando chegar no escopo global
+            if (tabela[i].escopo == ESC_GLOBAL) {
+                break; 
+            }
+            // Zumbifica o símbolo local se ele estiver ativo
+            if (tabela[i].escopo == ESC_LOCAL && tabela[i].estado == ESTADO_VIVO) {
+                tabela[i].estado = ESTADO_ZUMBI;
+            }
+        }
     }
 }
 
@@ -72,13 +95,15 @@ void imprimirTabela() {
         }
 
         const char* escopoStr = (tabela[i].escopo == ESC_GLOBAL) ? "global" : "local";
+        const char* estadoStr = (tabela[i].estado == ESTADO_VIVO) ? "ATIVO" : "ZUMBI"; 
 
-        printf("Nome: %-10s | Tipo: %-6s | Classe: %-6s | Escopo: %-6s | Tamanho: %d\n",
+        printf("Nome: %-10s | Tipo: %-6s | Classe: %-6s | Escopo: %-6s | Tamanho: %d | Estado: %s \n",
                tabela[i].nome,
                tabela[i].tipo,
                classeStr,
                escopoStr,
-               tabela[i].tamanho);
+               tabela[i].tamanho,
+               estadoStr);
     }
     printf("==================================\n");
 }

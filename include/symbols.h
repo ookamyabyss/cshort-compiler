@@ -5,7 +5,6 @@
 
 #define MAX_SIMBOLOS 1024
 
-
 // Escopo possível de um símbolo
 typedef enum {
     ESC_GLOBAL,
@@ -20,12 +19,18 @@ typedef enum {
     CLASSE_PARAM      // parâmetro (normal, por ref, ou vetor)
 } Classe;
 
+typedef enum {
+    ESTADO_VIVO, // Símbolo pode ser usado
+    ESTADO_ZUMBI  // Símbolo está fora de escopo e não pode ser usado
+} Estado;
+
 // Representa um símbolo na tabela
 typedef struct {
     char nome[64];     // identificador (id)
     char tipo[10];     // "int", "float", "char", "bool", "void"
     Classe classe;     // tipo de símbolo
     Escopo escopo;     // global ou local
+    Estado estado; 
     int tamanho;       // 1 (var), >1 (vetor), 0 (função ou parâmetro por referência)
 } Simbolo;
 

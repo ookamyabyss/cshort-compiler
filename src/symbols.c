@@ -5,6 +5,8 @@
 Simbolo tabelaSimbolos[MAX_SIMBOLOS];
 int numSimbolos = 0;
 
+Escopo escopoAtual = ESC_GLOBAL;  
+
 // Tabela de símbolos implementada como array sequencial
 static Simbolo tabela[MAX_TABELA];
 static int nSimbolos = 0;

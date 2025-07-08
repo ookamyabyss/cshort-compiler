@@ -37,6 +37,8 @@ typedef struct {
 extern Simbolo tabelaSimbolos[MAX_SIMBOLOS];
 extern int numSimbolos;
 
+extern Escopo escopoAtual;
+
 
 // Interface pública da tabela de símbolos
 void inicializarTabela();

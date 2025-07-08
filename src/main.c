@@ -3,6 +3,7 @@
 #include "lexer.h"
 #include "parser.h" 
 #include "symbols.h"
+#include "semantic.h"
 
 int main(int argc, char* argv[]) {
     if (argc != 2) {
@@ -16,15 +17,9 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    // Aqui antes era só o analisador léxico. Agora chamamos o parser completo:
-    startParser(f);
-    //imprimirTabela();     // imprime a tabela no fim
-
-    //inserirSimbolo("x", "int", CLASSE_VAR, ESC_GLOBAL, 1);
-    //inserirSimbolo("vet", "int", CLASSE_VETOR, ESC_GLOBAL, 10);
-    //inserirSimbolo("soma", "int", CLASSE_FUNCAO, ESC_GLOBAL, 0);
-    imprimirTabela();
-
+    startParser(f);        // Etapa léxica + sintática + preenche tabela
+    verificarSemantica();  // Etapa semântica
+    imprimirTabela();      // Tabela
 
     fclose(f);
     return 0;

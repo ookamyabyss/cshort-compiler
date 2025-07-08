@@ -6,6 +6,7 @@
 #include "parser.h"
 #include "lexer.h"
 #include "symbols.h"
+#include "semantic.h"
 
 // ==============================
 // Variáveis globais
@@ -423,6 +424,9 @@ void parseAtrib() {
         return;
     }
 
+    // ✅ Verificação semântica
+    verificarVariavelDeclarada(currentToken.lexeme);
+
     printf("[ATRIB] Início de atribuição: %s\n", currentToken.lexeme);
     advance();  // consome o id
 
@@ -488,6 +492,10 @@ void parseTermo() {
 void parseFator() {
     if (currentToken.type == TOKEN_ID) {
         Token idToken = currentToken;
+
+        // ✅ Verificação semântica
+        verificarVariavelDeclarada(idToken.lexeme);
+
         advance();
 
         if (currentToken.type == TOKEN_LBRACK) {

@@ -113,6 +113,10 @@ void parseDecl() {
             advance();
 
             if (currentToken.type == TOKEN_LPAREN) {
+
+                // ✅ Verificação semântica
+                verificarRedeclaracao(nomeFunc);
+
                 // função com tipo
                 registrarFuncao(tipoStr, nomeFunc);
                 printf("[DECL_FUNCAO] Função com tipo reconhecida: %s\n", nomeFunc);
@@ -156,6 +160,9 @@ void parseDecl() {
                     }
                 }
 
+                // ✅ Verificação semântica
+                verificarRedeclaracao(nomeFunc);
+
                 registrarVariavelGlobal(tipoStr, nomeFunc, isVetor, tamanho);
 
 
@@ -195,7 +202,12 @@ void parseDecl() {
         }
 
         parseEat(TOKEN_ID);
+
         printf("[DECL_FUNCAO_VOID] Função void reconhecida: %s\n", nomeFunc);
+        
+        // ✅ Verificação semântica
+        verificarRedeclaracao(nomeFunc);
+
         registrarFuncao("void", nomeFunc);
         parseEat(TOKEN_LPAREN);
         parseTiposParam();
@@ -247,6 +259,9 @@ void parseDeclVar(const char* tipo, Escopo escopo) {
             parseError("Esperado número inteiro dentro dos colchetes");
         }
     }
+
+    // ✅ Verificação semântica
+    verificarRedeclaracao(nomeVar);
 
     registrarVariavelGlobal(tipo, nomeVar, isVetor, tamanho);
 }

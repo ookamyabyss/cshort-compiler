@@ -1,8 +1,10 @@
 int y;
 
-int main() {
-    x = 5;     
 
-    y = 10;    
+int main() {
     return 0;
+}
+
+int main() {  
+    return 1;
 }

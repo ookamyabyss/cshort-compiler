@@ -12,11 +12,19 @@ void erroSemantico(const char* msg, const char* nome) {
     exit(1);
 }
 
-// Verifica se uma variável (ou vetor) foi declarada
+// ✅ 1° Verifica se uma variável (ou vetor) foi declarada
 void verificarVariavelDeclarada(const char* nome) {
     Simbolo* s = buscarSimbolo(nome, escopoAtual);  // <- agora passando escopo
     if (s == NULL) {
         erroSemantico("Variável não declarada", nome);
+    }
+}
+
+// ✅ 2° Redeclaração de identificador (variável ou função)
+void verificarRedeclaracao(const char* nome) {
+    Simbolo* existente = buscarSimbolo(nome, escopoAtual);
+    if (existente != NULL) {
+        erroSemantico("Identificador já declarado no mesmo escopo", nome);
     }
 }
 

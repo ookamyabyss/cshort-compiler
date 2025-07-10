@@ -407,6 +407,10 @@ void parseCmd() {
         } else if (lookahead.type == TOKEN_LPAREN) {
             // chamada de função como comando
             printf("[CMD] Chamada de função reconhecida: %s\n", currentToken.lexeme);
+
+            // ⚠️ VERIFICAÇÃO SEMÂNTICA AQUI
+            registrarChamadaDeFuncao(currentToken.lexeme);
+
             advance(); // consome id
             parseEat(TOKEN_LPAREN);
 
@@ -441,6 +445,7 @@ void parseAtrib() {
 
     // ✅ Verificação semântica
     verificarVariavelDeclarada(currentToken.lexeme);
+    iniciarAtribuicao(currentToken.lexeme);  
 
     printf("[ATRIB] Início de atribuição: %s\n", currentToken.lexeme);
     advance();  // consome o id
@@ -455,6 +460,8 @@ void parseAtrib() {
 
     parseEat(TOKEN_ASSIGN);  // consome '='
     parseExpr();          // processa o lado direito da atribuição
+
+    verificarTipoExpr();  // ou "float", "char"... (temporário, depende do teste!)
 
     printf("[ATRIB] Atribuição completa reconhecida\n");
 }
@@ -507,19 +514,20 @@ void parseTermo() {
 void parseFator() {
     if (currentToken.type == TOKEN_ID) {
         Token idToken = currentToken;
-
-        // ✅ Verificação semântica
-        verificarVariavelDeclarada(idToken.lexeme);
-
         advance();
 
         if (currentToken.type == TOKEN_LBRACK) {
+            // Uso como vetor
+            verificarVariavelDeclarada(idToken.lexeme);
             advance();
             parseExpr();
             parseEat(TOKEN_RBRACK);
-        }
-        else if (currentToken.type == TOKEN_LPAREN) {
+
+        } else if (currentToken.type == TOKEN_LPAREN) {
+            // Uso como função
+            registrarChamadaDeFuncao(idToken.lexeme);
             advance();
+
             if (currentToken.type != TOKEN_RPAREN) {
                 parseExpr();
                 while (currentToken.type == TOKEN_COMMA) {
@@ -527,7 +535,12 @@ void parseFator() {
                     parseExpr();
                 }
             }
+
             parseEat(TOKEN_RPAREN);
+
+        } else {
+            // Uso como variável simples
+            verificarVariavelDeclarada(idToken.lexeme);
         }
 
         printf("[EXPR] Fator reconhecido: %s\n", idToken.lexeme);
@@ -536,8 +549,10 @@ void parseFator() {
              currentToken.type == TOKEN_REALCON ||
              currentToken.type == TOKEN_CHARCON || 
              currentToken.type == TOKEN_CHARCON_N ||
-             currentToken.type == TOKEN_CHARCON_0) {
+             currentToken.type == TOKEN_CHARCON_0 ||
+             currentToken.type == TOKEN_BOOLCON) {
         printf("[EXPR] Constante reconhecida: %s\n", currentToken.lexeme);
+        registrarTipoConstante(currentToken);
         advance();
     }
     else if (currentToken.type == TOKEN_LPAREN) {
@@ -552,7 +567,10 @@ void parseFator() {
     else {
         parseError("Fator inválido");
     }
+
+    analisarTokenAtual(currentToken);
 }
+
 
 // ==============================
 // Funções auxiliares de análise

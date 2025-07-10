@@ -141,3 +141,16 @@ void registrarVariavelLocal(const char* tipo, const char* nome, int isVetor, int
         fprintf(stderr, "Erro ao registrar variável local: %s\n", nome);
     } 
 }
+
+
+// Busca o símbolo mais interno (local > global), ignorando escopoAtual
+Simbolo* buscarSimboloEmEscopos(const char* nome) {
+    for (int i = nSimbolos - 1; i >= 0; i--) {
+        if (strcmp(tabela[i].nome, nome) == 0 && tabela[i].estado == ESTADO_VIVO) {
+            return &tabela[i]; // O primeiro válido encontrado (mais interno)
+        }
+    }
+    return NULL;
+}
+
+

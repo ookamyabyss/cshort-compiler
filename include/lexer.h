@@ -43,6 +43,8 @@ typedef enum {
     TOKEN_SEMICOLON,  // ;
     TOKEN_COMMA,      // ,
 
+    TOKEN_BOOLCON,   // ✅ suporte a true e false
+
     // Palavras-chave específicas
     TOKEN_KEYWORD_INT,
     TOKEN_KEYWORD_CHAR,

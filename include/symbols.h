@@ -56,4 +56,6 @@ void registrarParametro(const char* tipo, const char* nome, Classe classe);
 
 void registrarVariavelLocal(const char* tipo, const char* nome, int isVetor, int tamanho);
 
+Simbolo* buscarSimboloEmEscopos(const char* nome);
+
 #endif

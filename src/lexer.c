@@ -178,6 +178,7 @@ Token getNextToken() {
         else if (strcmp(lexeme, "case") == 0) return makeToken(TOKEN_KEYWORD_CASE, lexeme, line, col);
         else if (strcmp(lexeme, "default") == 0) return makeToken(TOKEN_KEYWORD_DEFAULT, lexeme, line, col);
         else if (strcmp(lexeme, "string") == 0) return makeToken(TOKEN_KEYWORD_STRING, lexeme, line, col);
+        else if (strcmp(lexeme, "true") == 0 || strcmp(lexeme, "false") == 0) return makeToken(TOKEN_BOOLCON, lexeme, line, col);
         else return makeToken(TOKEN_ID, lexeme, line, col);
         return makeToken(TOKEN_ID, lexeme, line, col);
     }

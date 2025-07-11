@@ -12,13 +12,20 @@
 // Variáveis globais
 // ==============================
 
-static Token currentToken;     // Lookahead atual
-static Token backupToken;      // Token salvo para "voltar"
-static Token pushedToken;      // Token empurrado manualmente
-static int hasPushedToken = 0;
-static bool tokenBack = false;
+// Token atualmente em análise (lookahead principal usado pelo parser)
+static Token currentToken;     
 
-void obterTipoString(char* dest);
+// Token salvo temporariamente para permitir "voltar" um passo (backtracking simples)
+static Token backupToken;      
+
+// Token empurrado manualmente por alguma função (por exemplo, ungetToken)
+static Token pushedToken;      
+
+// Flag indicando se existe um token empurrado e aguardando ser usado
+static int hasPushedToken = 0;  
+
+// Flag que permite um "retrocesso" simples: reprocessar o último token
+static bool tokenBack = false; 
 
 // ==============================
 // Controle de Tokens
@@ -571,7 +578,6 @@ void parseFator() {
     analisarTokenAtual(currentToken);
 }
 
-
 // ==============================
 // Funções auxiliares de análise
 // ==============================
@@ -734,6 +740,8 @@ int isComandoInicio(TokenType t) {
 // ==============================
 // SIMBOLOS FUNC AUXILIARES
 // ==============================
+
+// Copia o nome textual do tipo atual do token (int, float, char, bool) para a string 'dest'
 void obterTipoString(char* dest) {
     switch (currentToken.type) {
         case TOKEN_KEYWORD_INT:   strcpy(dest, "int"); break;

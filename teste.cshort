@@ -1,7 +1,9 @@
-int f() {
-    return 1;
+int f;
+
+int soma(){
+    f = 3;
 }
 
 int main() {
-    f = 3;  
+    soma();
 }

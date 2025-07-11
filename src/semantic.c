@@ -1,14 +1,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include "semantic.h"
 #include "symbols.h"
+#include "lexer.h" 
 
-#include "lexer.h"  // ou tokens.h, onde está o struct Token
+// Armazena o tipo da variável no lado esquerdo da atribuição 
+static const char* tipoAtribuido = NULL;
 
-static const char* tipoAtribuido = NULL;     // Tipo da variável (esquerda)
-static const char* tipoExpressao = NULL;     // Tipo do valor atribuído (direita)
+// Armazena o tipo da expressão do lado direito da atribuição 
+static const char* tipoExpressao = NULL;
 
+// Escopo atual de análise (global ou local)
 extern Escopo escopoAtual;
 
 // Emite uma mensagem de erro semântico e encerra o compilador
@@ -33,6 +37,7 @@ void verificarRedeclaracao(const char* nome) {
     }
 }
 
+// Inicia uma operação de atribuição, armazenando o tipo da variável alvo
 void iniciarAtribuicao(const char* nome) {
     Simbolo* s = buscarSimboloEmEscopos(nome);
     if (s == NULL) {
@@ -47,10 +52,12 @@ void iniciarAtribuicao(const char* nome) {
     tipoExpressao = NULL; 
 }
 
+// Registra o tipo da expressão analisada (para posterior verificação)
 void registrarTipoExpressao(const char* tipo) {
     tipoExpressao = tipo;
 }
 
+// ✅ 3° Verifica tipo compatível na atribuição (esquerda vs direita)
 void verificarTipoExpr() {
     if (tipoAtribuido == NULL || tipoExpressao == NULL) return;
 
@@ -61,6 +68,7 @@ void verificarTipoExpr() {
     }
 }
 
+// Determina o tipo de uma constante literal e registra automaticamente
 void registrarTipoConstante(Token token) {
     switch (token.type) {
         case TOKEN_INTCON:
@@ -82,10 +90,12 @@ void registrarTipoConstante(Token token) {
     }
 }
 
+// Finaliza a análise semântica com mensagem de sucesso (placeholder)
 void verificarSemantica() {
     printf("[OK] Análise semântica concluída com sucesso.\n");
 }
 
+// Avalia o token atual e registra tipo se aplicável (constante ou id)
 void analisarTokenAtual(Token token) {
     // Constante literal? Registra o tipo normalmente
     registrarTipoConstante(token);
@@ -103,6 +113,7 @@ void analisarTokenAtual(Token token) {
     }
 }
 
+// ✅ 4° Verifica se identificador chamado é uma função válida
 void registrarChamadaDeFuncao(const char* nome) {
     Simbolo* s = buscarSimboloEmEscopos(nome);
     if (s == NULL) {
@@ -113,5 +124,3 @@ void registrarChamadaDeFuncao(const char* nome) {
     }
     registrarTipoExpressao(s->tipo); // permite verificar o tipo de retorno em atribuições
 }
-
-

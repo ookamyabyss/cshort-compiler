@@ -344,5 +344,4 @@ Token getNextToken() {
             return makeToken(TOKEN_INVALID, lexeme, line, col);
     }
 
-
 }

@@ -2,21 +2,31 @@
 #include <string.h>
 #include "symbols.h"
 
+// Tabela de símbolos visível globalmente (para debug ou inspeção externa)
 Simbolo tabelaSimbolos[MAX_SIMBOLOS];
 int numSimbolos = 0;
 
-Escopo escopoAtual = ESC_GLOBAL;  
+// Escopo atual do compilador (inicia como global)
+Escopo escopoAtual = ESC_GLOBAL;
 
-// Tabela de símbolos implementada como array sequencial
+// Tabela interna real (array estático)
 static Simbolo tabela[MAX_TABELA];
 static int nSimbolos = 0;
 
-// Inicializa a tabela (zera o contador)
+// ===================
+// Inicialização
+// ===================
+
+// Inicializa a tabela de símbolos (zera o contador)
 void inicializarTabela() {
     nSimbolos = 0;
 }
 
-// Insere um novo símbolo na tabela
+// ===================
+// Inserção e busca
+// ===================
+
+// Insere um novo símbolo na tabela de símbolos
 int inserirSimbolo(const char* nome, const char* tipo, Classe classe, Escopo escopo, int tamanho) {
     // Verifica se já existe símbolo com mesmo nome e escopo
     for (int i = 0; i < nSimbolos; i++) {
@@ -46,7 +56,7 @@ int inserirSimbolo(const char* nome, const char* tipo, Classe classe, Escopo esc
     return 1;  // sucesso
 }
 
-// Busca símbolo por nome e escopo exato (útil para inserção e resolução)
+// Busca um símbolo pelo nome e escopo, respeitando zumbificação e sombreamento
 Simbolo* buscarSimbolo(const char* nome, Escopo escopo) {
     // --- ALTERADO ---
     // A busca agora ignora zumbis e respeita o sombreamento de escopo.
@@ -67,6 +77,7 @@ Simbolo* buscarSimbolo(const char* nome, Escopo escopo) {
     return NULL; 
 }
 
+// Zumbifica todos os símbolos locais ativos (limpa o escopo local)
 void limparEscopo(Escopo escopo) {
 
     if (escopo == ESC_LOCAL) {
@@ -83,7 +94,7 @@ void limparEscopo(Escopo escopo) {
     }
 }
 
-// Imprime a tabela completa (para debug)
+// Imprime todos os símbolos cadastrados (para debug)
 void imprimirTabela() {
     printf("======= TABELA DE SÍMBOLOS =======\n");
     for (int i = 0; i < nSimbolos; i++) {
@@ -110,6 +121,11 @@ void imprimirTabela() {
     printf("==================================\n");
 }
 
+// ===================
+// Funções auxiliares para o parser
+// ===================
+
+// Registra uma variável global (vetor ou não)
 void registrarVariavelGlobal(const char* tipo, const char* nome, int isVetor, int tamanho) {
     Classe classe = isVetor ? CLASSE_VETOR : CLASSE_VAR;
     if (!inserirSimbolo(nome, tipo, classe, ESC_GLOBAL, isVetor ? tamanho : 1)) {
@@ -117,10 +133,12 @@ void registrarVariavelGlobal(const char* tipo, const char* nome, int isVetor, in
     }
 }
 
+// Registra uma função global
 void registrarFuncao(const char* tipo, const char* nome) {
     inserirSimbolo(nome, tipo, CLASSE_FUNCAO, ESC_GLOBAL, 0);
 }
 
+// Registra um parâmetro de função (vetor, valor ou por referência)
 void registrarParametro(const char* tipo, const char* nome, Classe classe) {
     int tamanho = (classe == CLASSE_VETOR) ? 0 : 1;
     if (!inserirSimbolo(nome, tipo, classe, ESC_LOCAL, tamanho)) {
@@ -135,6 +153,7 @@ void registrarParametro(const char* tipo, const char* nome, Classe classe) {
     }
 }
 
+// Registra uma variável local (vetor ou não)
 void registrarVariavelLocal(const char* tipo, const char* nome, int isVetor, int tamanho) {
     Classe classe = isVetor ? CLASSE_VETOR : CLASSE_VAR;
     if (!inserirSimbolo(nome, tipo, classe, ESC_LOCAL, isVetor ? tamanho : 1)) {
@@ -142,8 +161,7 @@ void registrarVariavelLocal(const char* tipo, const char* nome, int isVetor, int
     } 
 }
 
-
-// Busca o símbolo mais interno (local > global), ignorando escopoAtual
+// Busca o símbolo mais interno (prioriza local, depois global)
 Simbolo* buscarSimboloEmEscopos(const char* nome) {
     for (int i = nSimbolos - 1; i >= 0; i--) {
         if (strcmp(tabela[i].nome, nome) == 0 && tabela[i].estado == ESTADO_VIVO) {
@@ -152,5 +170,3 @@ Simbolo* buscarSimboloEmEscopos(const char* nome) {
     }
     return NULL;
 }
-
-

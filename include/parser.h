@@ -54,4 +54,7 @@ void ungetToken(Token t);             // "devolve" token ao fluxo léxico
 
 void parseEat(int expectedType);     // consome token, erro se diferente
 
+// Retorna em 'dest' o nome do tipo correspondente ao token atual
+void obterTipoString(char* dest); 
+
 #endif // PARSER_H

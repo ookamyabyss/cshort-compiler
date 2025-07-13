@@ -12,6 +12,11 @@
 // Variáveis globais
 // ==============================
 
+// Armazena os tipos dos parâmetros encontrados
+char tiposParamsTemp[MAX_PARAMS_FUNCAO][10];
+char nomesParamsTemp[MAX_PARAMS_FUNCAO][256];
+int numParamsTemp = 0;
+
 // Token atualmente em análise (lookahead principal usado pelo parser)
 static Token currentToken;     
 
@@ -120,15 +125,15 @@ void parseDecl() {
             advance();
 
             if (currentToken.type == TOKEN_LPAREN) {
+     
+                advance();                    // consome '('
+                parseTiposParam();            // coleta parâmetros primeiro
 
-                // ✅ Verificação semântica
-                verificarRedeclaracao(nomeFunc);
-
-                // função com tipo
-                registrarFuncao(tipoStr, nomeFunc);
+                verificarAssinaturaCompatível(nomeFunc, tipoStr, numParamsTemp, tiposParamsTemp);
+                verificarRedeclaracao(nomeFunc); // ainda útil para função que já foi definida
+                registrarFuncao(tipoStr, nomeFunc, numParamsTemp, tiposParamsTemp);
                 printf("[DECL_FUNCAO] Função com tipo reconhecida: %s\n", nomeFunc);
-                advance();
-                parseTiposParam();
+
                 parseEat(TOKEN_RPAREN);
 
                 while (currentToken.type == TOKEN_COMMA) {
@@ -140,9 +145,22 @@ void parseDecl() {
                     parseEat(TOKEN_RPAREN);
                 }
 
+
             if (currentToken.type == TOKEN_SEMICOLON) {
+                verificarVoidEmFuncaoSemParametros(numParamsTemp, tiposParamsTemp, nomeFunc);
+
+                // ✅ É um protótipo: manter a verificação original
+                verificarRedeclaracao(nomeFunc);
+
                 advance();
             } else if (currentToken.type == TOKEN_LBRACE) {
+                // ✅ Verificação de compatibilidade com protótipo (se existir)
+                verificarAssinaturaCompatível(nomeFunc, tipoStr, numParamsTemp, tiposParamsTemp);
+
+                // ✅ Verifica se já foi definida antes
+                verificarDefinicaoDeFuncao(nomeFunc);
+
+                // ✅ Continua o parsing do corpo da função
                 parseFunc();
             } else {
                 parseError("Esperado ';' ou '{' após declaração de função");
@@ -200,6 +218,8 @@ void parseDecl() {
         }
 
     } else if (currentToken.type == TOKEN_KEYWORD_VOID) {
+
+
         parseEat(TOKEN_KEYWORD_VOID);
 
         char nomeFunc[256];
@@ -215,7 +235,7 @@ void parseDecl() {
         // ✅ Verificação semântica
         verificarRedeclaracao(nomeFunc);
 
-        registrarFuncao("void", nomeFunc);
+        registrarFuncao("void", nomeFunc, numParamsTemp, tiposParamsTemp);
         parseEat(TOKEN_LPAREN);
         parseTiposParam();
         parseEat(TOKEN_RPAREN);
@@ -232,6 +252,8 @@ void parseDecl() {
         if (currentToken.type == TOKEN_SEMICOLON) {
             advance();
         } else if (currentToken.type == TOKEN_LBRACE) {
+            verificarAssinaturaCompatível(nomeFunc, "void", numParamsTemp, tiposParamsTemp);
+            verificarDefinicaoDeFuncao(nomeFunc);
             parseFunc();
         } else {
             parseError("Esperado ';' ou '{' após declaração de função void");
@@ -284,11 +306,21 @@ void parseTipo() {
 
 // tipos_param ::= void | tipo (id | &id | id[]){, tipo (...)}
 void parseTiposParam() {
+    numParamsTemp = 0;
+    for (int i = 0; i < MAX_PARAMS_FUNCAO; i++) {
+        nomesParamsTemp[i][0] = '\0';
+        tiposParamsTemp[i][0] = '\0';
+    }
+
     if (currentToken.type == TOKEN_RPAREN) {
         return;
     }
 
     if (currentToken.type == TOKEN_KEYWORD_VOID) {
+        // Registra void como único tipo de parâmetro
+        strcpy(tiposParamsTemp[0], "void");
+        numParamsTemp = 1;
+        
         advance();
 
         if (currentToken.type != TOKEN_RPAREN) {
@@ -304,6 +336,7 @@ void parseTiposParam() {
         advance();
         parseTipoParam();  
     }
+
 }
 
 // func ::= tipo/void id(...) '{' {decl_var} {cmd} '}' 
@@ -665,6 +698,15 @@ void parseTipoParam() {
 
     char tipoStr[10];                  // ← Captura o tipo ANTES de consumir
     obterTipoString(tipoStr);
+
+    if (numParamsTemp < MAX_PARAMS_FUNCAO) {
+        strncpy(tiposParamsTemp[numParamsTemp], tipoStr, sizeof(tiposParamsTemp[numParamsTemp]));
+        tiposParamsTemp[numParamsTemp][sizeof(tiposParamsTemp[numParamsTemp]) - 1] = '\0';
+        numParamsTemp++;
+    } else {
+        parseError("Número excessivo de parâmetros na função");
+    }
+
     advance(); // consome o tipo
 
     // Verifica se é '&' (um único token do tipo TOKEN_AND)
@@ -682,6 +724,16 @@ void parseTipoParam() {
     char nome[256];
     strncpy(nome, currentToken.lexeme, sizeof(nome));
     nome[sizeof(nome) - 1] = '\0';
+
+    // ✅ Verifica se já existe parâmetro com mesmo nome
+    verificarParametroRepetido(nome);  // ← ESTA LINHA É A NOVA ADIÇÃO
+
+    // ✅ Armazena o nome após checar
+    strncpy(nomesParamsTemp[numParamsTemp], nome, sizeof(nomesParamsTemp[numParamsTemp]));
+    nomesParamsTemp[numParamsTemp][sizeof(nomesParamsTemp[numParamsTemp]) - 1] = '\0';
+
+    numParamsTemp++; // só incrementa aqui, após nome e tipo armazenados
+
     advance(); // consome ID
 
     // Verifica se é vetor

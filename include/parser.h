@@ -5,6 +5,12 @@
 #include "lexer.h"
 #include "symbols.h"
 
+#define MAX_PARAMS_FUNCAO 32
+
+extern char tiposParamsTemp[MAX_PARAMS_FUNCAO][10];
+extern char nomesParamsTemp[MAX_PARAMS_FUNCAO][256];
+extern int numParamsTemp;
+
 // ==============================
 // Inicialização
 // ==============================

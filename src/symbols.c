@@ -52,6 +52,9 @@ int inserirSimbolo(const char* nome, const char* tipo, Classe classe, Escopo esc
     // Todo novo símbolo inserido começa como ATIVO
     tabela[nSimbolos].estado = ESTADO_VIVO;
 
+    // Inicializa se já foi definida (para funções, assume que NÃO foi definida ainda)
+    tabela[nSimbolos].foiDefinida = false;
+
     nSimbolos++;
     return 1;  // sucesso
 }
@@ -79,14 +82,8 @@ Simbolo* buscarSimbolo(const char* nome, Escopo escopo) {
 
 // Zumbifica todos os símbolos locais ativos (limpa o escopo local)
 void limparEscopo(Escopo escopo) {
-
     if (escopo == ESC_LOCAL) {
         for (int i = nSimbolos - 1; i >= 0; i--) {
-            // Para quando chegar no escopo global
-            if (tabela[i].escopo == ESC_GLOBAL) {
-                break; 
-            }
-            // Zumbifica o símbolo local se ele estiver ativo
             if (tabela[i].escopo == ESC_LOCAL && tabela[i].estado == ESTADO_VIVO) {
                 tabela[i].estado = ESTADO_ZUMBI;
             }
@@ -133,9 +130,32 @@ void registrarVariavelGlobal(const char* tipo, const char* nome, int isVetor, in
     }
 }
 
-// Registra uma função global
-void registrarFuncao(const char* tipo, const char* nome) {
-    inserirSimbolo(nome, tipo, CLASSE_FUNCAO, ESC_GLOBAL, 0);
+// Registra uma função global (protótipo ou definição)
+void registrarFuncao(const char* tipo, const char* nome, int nParams, char tiposParams[][10]) {
+    Simbolo* existente = buscarSimbolo(nome, ESC_GLOBAL);
+
+    // Caso já exista como função ainda não definida (protótipo), apenas atualiza assinatura
+    if (existente && existente->classe == CLASSE_FUNCAO && !existente->foiDefinida) {
+        strncpy(existente->tipo, tipo, sizeof(existente->tipo));
+        existente->nParams = nParams;
+
+        for (int i = 0; i < nParams; i++) {
+            strncpy(existente->tiposParams[i], tiposParams[i], sizeof(existente->tiposParams[i]));
+        }
+
+        return;
+    }
+
+    // Se não existe ou já foi definida, tenta inserir nova função
+    int ok = inserirSimbolo(nome, tipo, CLASSE_FUNCAO, ESC_GLOBAL, 0);
+    if (!ok) return;
+
+    Simbolo* func = &tabela[nSimbolos - 1]; // acesso direto ao novo símbolo
+
+    func->nParams = nParams;
+    for (int i = 0; i < nParams; i++) {
+        strncpy(func->tiposParams[i], tiposParams[i], sizeof(func->tiposParams[i]));
+    }
 }
 
 // Registra um parâmetro de função (vetor, valor ou por referência)

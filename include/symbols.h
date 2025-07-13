@@ -3,6 +3,8 @@
 #define SYMBOLS_H
 #define MAX_TABELA 1000
 #define MAX_SIMBOLOS 1024
+#define MAX_PARAM 10
+
 
 // Escopo possível de um símbolo (global ou local)
 typedef enum {
@@ -32,6 +34,10 @@ typedef struct {
     Escopo escopo;     // escopo onde foi declarado (global/local)
     Estado estado;     // se ainda pode ser usado (vivo ou zumbi)
     int tamanho;       // tamanho usado em vetores; 1 para var simples; 0 para função/ref
+    bool foiDefinida;
+
+    int nParams;                   // número de parâmetros
+    char tiposParams[MAX_PARAM][10];  // tipo de cada parâmetro, na ordem
 } Simbolo;
 
 // Array com todos os símbolos registrados
@@ -66,7 +72,7 @@ void imprimirTabela();
 void registrarVariavelGlobal(const char* tipo, const char* nome, int isVetor, int tamanho);
 
 // Registra uma nova função na tabela de símbolos
-void registrarFuncao(const char* tipo, const char* nome);
+void registrarFuncao(const char* tipo, const char* nome, int nParams, char tiposParams[][10]);
 
 // Registra um parâmetro de função (normal, por ref, ou vetor)
 void registrarParametro(const char* tipo, const char* nome, Classe classe);

@@ -1,9 +1,3 @@
-int f;
+int foo(void);   // OK
 
-int soma(){
-    f = 3;
-}
-
-int main() {
-    soma();
-}
+int bar();       // ERRO: Função sem parâmetros deve declarar void explicitamente

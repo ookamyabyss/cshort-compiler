@@ -37,4 +37,12 @@ void iniciarAtribuicao(const char* nome);
 // ✅ 4° Verifica se identificador chamado é uma função válida
 void registrarChamadaDeFuncao(const char* nome);
 
-#endif 
+void verificarDefinicaoDeFuncao(const char* nome);
+
+void verificarAssinaturaCompatível(const char* nome, const char* tipoRetorno, int nParams, char tiposParams[][10]);
+
+void verificarParametroRepetido(const char* nome);
+
+void verificarVoidEmFuncaoSemParametros(int nParams, char tiposParams[][10], const char* nome);
+
+#endif

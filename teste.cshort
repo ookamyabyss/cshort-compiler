@@ -1,3 +1,24 @@
-// Correto: função sem parâmetros usa void
-int foo(void);
+int main() {
+    int a;
+    char c;
+    bool b;
+    float f;
+    int v[10];
+    char letras[5];
 
+    a = 1;       // int ← int ✔
+    c = 'x';     // char ← char ✔
+    a = c;       // int ← char ✔
+    c = a;       // char ← int ✔
+    b = 1 < 2;   // bool ← bool (resultado de comparação) ✔
+    a = b;       // int ← bool ✔
+    v[0] = v[1]; // int[] ← int[] ✔
+    letras[0] = letras[1]; // char[] ← char[] ✔
+
+    a = f;       // int ← float ✘
+    f = a;       // float ← int ✘
+    b = f;       // bool ← float ✘
+    c = b;       // char ← bool ✘
+
+    return;
+}

@@ -559,6 +559,7 @@ void parseFator() {
         if (currentToken.type == TOKEN_LBRACK) {
             // Uso como vetor
             verificarVariavelDeclarada(idToken.lexeme);
+            analisarTokenAtual(idToken);  // <- AQUI: registra tipo do vetor
             advance();
             parseExpr();
             parseEat(TOKEN_RBRACK);
@@ -581,6 +582,7 @@ void parseFator() {
         } else {
             // Uso como variável simples
             verificarVariavelDeclarada(idToken.lexeme);
+            analisarTokenAtual(idToken);  // <- AQUI: registra tipo do id simples
         }
 
         printf("[EXPR] Fator reconhecido: %s\n", idToken.lexeme);
@@ -608,7 +610,7 @@ void parseFator() {
         parseError("Fator inválido");
     }
 
-    analisarTokenAtual(currentToken);
+    //analisarTokenAtual(currentToken);
 }
 
 // ==============================

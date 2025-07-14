@@ -61,4 +61,8 @@ void verificarParametroRepetido(const char* nome);
 // Verifica se função sem parâmetros declarou `void` explicitamente
 void verificarVoidEmFuncaoSemParametros(int nParams, char tiposParams[][10], const char* nome);
 
+void garantirTipoDefinido(const char* tipo, const char* nome);
+
+bool tiposSaoCompatíveis(const char* tipo1, const char* tipo2);
+
 #endif

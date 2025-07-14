@@ -76,6 +76,8 @@ void iniciarAtribuicao(const char* nome) {
         erroSemantico("Função usada como variável na atribuição", nome);
     }
 
+    garantirTipoDefinido(s->tipo, s->nome);
+
     tipoAtribuido = s->tipo;
     tipoExpressao = NULL; 
 }
@@ -89,9 +91,11 @@ void registrarTipoExpressao(const char* tipo) {
 void verificarTipoExpr() {
     if (tipoAtribuido == NULL || tipoExpressao == NULL) return;
 
-    if (strcmp(tipoAtribuido, tipoExpressao) != 0) {
+    if (!tiposSaoCompatíveis(tipoAtribuido, tipoExpressao)) {
         char msg[128];
-        snprintf(msg, sizeof(msg), "Tipo incompatível na atribuição: esperado '%s', mas recebeu '%s'", tipoAtribuido, tipoExpressao);
+        snprintf(msg, sizeof(msg),
+            "Tipo incompatível na atribuição: esperado '%s', mas recebeu '%s'",
+            tipoAtribuido, tipoExpressao);
         erroSemantico(msg, "");
     }
 }
@@ -131,6 +135,8 @@ void analisarTokenAtual(Token token) {
             erroSemantico("Identificador usado mas não declarado", token.lexeme);
         }
 
+        garantirTipoDefinido(s->tipo, s->nome);
+
         // Considera que o uso é numa expressão
         registrarTipoExpressao(s->tipo);
     }
@@ -149,6 +155,9 @@ void registrarChamadaDeFuncao(const char* nome) {
     if (s->classe != CLASSE_FUNCAO) {
         erroSemantico("Identificador chamado como função, mas não é uma função", nome);
     }
+
+    garantirTipoDefinido(s->tipo, s->nome);
+
     registrarTipoExpressao(s->tipo); // permite verificar o tipo de retorno em atribuições
 }
 
@@ -217,4 +226,39 @@ void verificarVoidEmFuncaoSemParametros(int nParams, char tiposParams[][10], con
     if (nParams == 1 && strcmp(tiposParams[0], "void") == 0) {
         return; // ok
     }
+}
+
+
+
+
+void garantirTipoDefinido(const char* tipo, const char* nome) {
+    if (tipo == NULL || strcmp(tipo, "") == 0 || strcmp(tipo, "tipo") == 0) {
+        erroSemantico("Tipo da variável ou função não foi definido corretamente", nome);
+    }
+}
+
+// Função auxiliar para verificar se dois tipos são compatíveis
+bool tiposSaoCompatíveis(const char* tipo1, const char* tipo2) {
+    // Mesmos tipos
+    if (strcmp(tipo1, tipo2) == 0) return true;
+
+    // int <-> char
+    if ((strcmp(tipo1, "int") == 0 && strcmp(tipo2, "char") == 0) ||
+        (strcmp(tipo1, "char") == 0 && strcmp(tipo2, "int") == 0)) {
+        return true;
+    }
+
+    // Expressão relacional gera "bool", compatível com "int"
+    if ((strcmp(tipo1, "bool") == 0 && strcmp(tipo2, "int") == 0) ||
+        (strcmp(tipo1, "int") == 0 && strcmp(tipo2, "bool") == 0)) {
+        return true;
+    }
+
+    // Vetores (exatamente mesmo tipo com "[]")
+    if ((strcmp(tipo1, "int[]") == 0 && strcmp(tipo2, "int[]") == 0) ||
+        (strcmp(tipo1, "char[]") == 0 && strcmp(tipo2, "char[]") == 0)) {
+        return true;
+    }
+
+    return false; // não compatível
 }

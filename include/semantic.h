@@ -65,4 +65,16 @@ void garantirTipoDefinido(const char* tipo, const char* nome);
 
 bool tiposSaoCompatíveis(const char* tipo1, const char* tipo2);
 
+void verificarUsoDeFuncaoEmExpressao(const char* nome);
+
+void verificarUsoDeFuncaoComoComando(const char* nome);
+
+void verificarReturnComValor();
+
+void verificarReturnSemValor();
+
+void setFuncaoAtual(const char* nome);
+
+void verificarFuncaoComRetornoObrigatorio();
+
 #endif

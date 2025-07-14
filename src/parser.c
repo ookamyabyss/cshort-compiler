@@ -160,6 +160,9 @@ void parseDecl() {
                 // ✅ Verifica se já foi definida antes
                 verificarDefinicaoDeFuncao(nomeFunc);
 
+                // ✅ registra nome da função atual
+                setFuncaoAtual(nomeFunc);
+
                 // ✅ Continua o parsing do corpo da função
                 parseFunc();
             } else {
@@ -252,8 +255,16 @@ void parseDecl() {
         if (currentToken.type == TOKEN_SEMICOLON) {
             advance();
         } else if (currentToken.type == TOKEN_LBRACE) {
+            // ✅ Verificação de compatibilidade com protótipo (se existir)
             verificarAssinaturaCompatível(nomeFunc, "void", numParamsTemp, tiposParamsTemp);
+
+            // ✅ Verifica se já foi definida antes
             verificarDefinicaoDeFuncao(nomeFunc);
+
+            // ✅ registra nome da função atual
+            setFuncaoAtual(nomeFunc);
+
+            // ✅ Continua o parsing do corpo da função
             parseFunc();
         } else {
             parseError("Esperado ';' ou '{' após declaração de função void");
@@ -357,6 +368,8 @@ void parseFunc() {
         parseCmd();
     }
 
+    verificarFuncaoComRetornoObrigatorio();
+
     parseEat(TOKEN_RBRACE);
     limparEscopo(ESC_LOCAL);
 }
@@ -418,6 +431,12 @@ void parseCmd() {
 
         if (currentToken.type != TOKEN_SEMICOLON) {
             parseExpr();
+
+            // ⚠️ Aqui: return com valor
+            verificarReturnComValor();
+        } else {
+            // ⚠️ Aqui: return vazio
+            verificarReturnSemValor();
         }
 
         parseEat(TOKEN_SEMICOLON);
@@ -449,7 +468,7 @@ void parseCmd() {
             printf("[CMD] Chamada de função reconhecida: %s\n", currentToken.lexeme);
 
             // ⚠️ VERIFICAÇÃO SEMÂNTICA AQUI
-            registrarChamadaDeFuncao(currentToken.lexeme);
+            verificarUsoDeFuncaoComoComando(currentToken.lexeme);
 
             advance(); // consome id
             parseEat(TOKEN_LPAREN);
@@ -566,7 +585,7 @@ void parseFator() {
 
         } else if (currentToken.type == TOKEN_LPAREN) {
             // Uso como função
-            registrarChamadaDeFuncao(idToken.lexeme);
+            verificarUsoDeFuncaoEmExpressao(idToken.lexeme);
             advance();
 
             if (currentToken.type != TOKEN_RPAREN) {
@@ -805,3 +824,4 @@ void obterTipoString(char* dest) {
         default: strcpy(dest, "???"); break;
     }
 }
+

@@ -7,6 +7,10 @@
 #include "lexer.h" 
 #include "parser.h"
 
+static const char* nomeFuncaoAtual = NULL;
+
+static bool encontrouReturnComValor = false;
+
 // Armazena o tipo da variável no lado esquerdo da atribuição 
 static const char* tipoAtribuido = NULL;
 
@@ -261,4 +265,74 @@ bool tiposSaoCompatíveis(const char* tipo1, const char* tipo2) {
     }
 
     return false; // não compatível
+}
+
+void verificarUsoDeFuncaoEmExpressao(const char* nome) {
+    Simbolo* s = buscarSimboloEmEscopos(nome);
+    if (!s || s->classe != CLASSE_FUNCAO) {
+        erroSemantico("Identificador chamado como função, mas não é uma função", nome);
+    }
+
+    garantirTipoDefinido(s->tipo, s->nome);
+
+    if (strcmp(s->tipo, "void") == 0) {
+        erroSemantico("Função 'void' não pode ser usada como expressão", nome);
+    }
+
+    registrarTipoExpressao(s->tipo);
+}
+
+void verificarUsoDeFuncaoComoComando(const char* nome) {
+    Simbolo* s = buscarSimboloEmEscopos(nome);
+    if (!s || s->classe != CLASSE_FUNCAO) {
+        erroSemantico("Identificador chamado como função, mas não é uma função", nome);
+    }
+
+    garantirTipoDefinido(s->tipo, s->nome);
+
+    if (strcmp(s->tipo, "void") != 0) {
+        erroSemantico("Função com valor de retorno usada como comando", nome);
+    }
+}
+
+void verificarReturnComValor() {
+    if (!nomeFuncaoAtual) return;
+
+    Simbolo* func = buscarSimbolo(nomeFuncaoAtual, ESC_GLOBAL);
+    if (!func || func->classe != CLASSE_FUNCAO) return;
+
+    if (strcmp(func->tipo, "void") == 0) {
+        erroSemantico("Função 'void' não pode retornar valor", func->nome);
+    }
+
+    encontrouReturnComValor = true;  // <-- marca que houve retorno com valor
+
+}
+
+void verificarReturnSemValor() {
+    if (!nomeFuncaoAtual) return;
+
+    Simbolo* func = buscarSimbolo(nomeFuncaoAtual, ESC_GLOBAL);
+    if (!func || func->classe != CLASSE_FUNCAO) return;
+
+    if (strcmp(func->tipo, "void") != 0) {
+        erroSemantico("Função com valor de retorno exige 'return' com valor", func->nome);
+    }
+}
+
+void setFuncaoAtual(const char* nome) {
+    nomeFuncaoAtual = nome;
+    encontrouReturnComValor = false;  // reset ao entrar na função
+
+}
+
+void verificarFuncaoComRetornoObrigatorio() {
+    if (!nomeFuncaoAtual) return;
+
+    Simbolo* func = buscarSimbolo(nomeFuncaoAtual, ESC_GLOBAL);
+    if (!func || func->classe != CLASSE_FUNCAO) return;
+
+    if (strcmp(func->tipo, "void") != 0 && !encontrouReturnComValor) {
+        erroSemantico("Função com valor de retorno deve conter pelo menos um 'return expr;'", func->nome);
+    }
 }

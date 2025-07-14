@@ -1,3 +1,3 @@
-int foo(void);   // OK
+// Correto: função sem parâmetros usa void
+int foo(void);
 
-int bar();       // ERRO: Função sem parâmetros deve declarar void explicitamente

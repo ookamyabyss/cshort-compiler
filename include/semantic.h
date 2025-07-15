@@ -61,20 +61,45 @@ void verificarParametroRepetido(const char* nome);
 // Verifica se função sem parâmetros declarou `void` explicitamente
 void verificarVoidEmFuncaoSemParametros(int nParams, char tiposParams[][10], const char* nome);
 
+// Verifica se o tipo de uma variável ou função está corretamente definido
 void garantirTipoDefinido(const char* tipo, const char* nome);
 
+// Retorna se dois tipos são semanticamente compatíveis
 bool tiposSaoCompatíveis(const char* tipo1, const char* tipo2);
 
+// Verifica se função com retorno está sendo usada como expressão
 void verificarUsoDeFuncaoEmExpressao(const char* nome);
 
+// Verifica se função com valor de retorno está sendo usada como comando
 void verificarUsoDeFuncaoComoComando(const char* nome);
 
+// Verifica se há erro de retorno de valor em função `void`
 void verificarReturnComValor();
 
+// Verifica se há erro de `return;` em função com retorno
 void verificarReturnSemValor();
 
+// Armazena o nome da função atualmente sendo analisada
 void setFuncaoAtual(const char* nome);
 
+// Verifica se função com tipo de retorno tem pelo menos um `return expr;`
 void verificarFuncaoComRetornoObrigatorio();
+
+void registrarTipoRelacional();
+
+void registrarTipoLogico(); 
+
+const char* tipoDominanteAritmetico(const char* t1, const char* t2);
+
+const char* getTipoExpressao();
+
+void setTipoExpressao(const char* tipo);
+
+bool tipoEhVetor(const char* tipo);
+
+void setUltimoTipoExpr(const char* tipo);
+
+const char* getUltimoTipoExpr();
+
 
 #endif

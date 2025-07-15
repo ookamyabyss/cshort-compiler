@@ -20,6 +20,7 @@ typedef enum {
     TOKEN_MINUS,      // -
     TOKEN_MUL,        // *
     TOKEN_DIV,        // /
+    TOKEN_NOT,        // !
 
     // Operadores relacionais e lógicos
     TOKEN_EQ,         // ==

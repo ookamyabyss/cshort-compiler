@@ -153,6 +153,7 @@ void parseDecl() {
                 verificarRedeclaracao(nomeFunc);
 
                 advance();
+                limparEscopo(ESC_LOCAL);
             } else if (currentToken.type == TOKEN_LBRACE) {
                 // ✅ Verificação de compatibilidade com protótipo (se existir)
                 verificarAssinaturaCompatível(nomeFunc, tipoStr, numParamsTemp, tiposParamsTemp);
@@ -161,10 +162,17 @@ void parseDecl() {
                 verificarDefinicaoDeFuncao(nomeFunc);
 
                 // ✅ registra nome da função atual
-                setFuncaoAtual(nomeFunc);
+                setFuncaoAtual(nomeFunc); 
+
+                escopoAtual = ESC_LOCAL;
 
                 // ✅ Continua o parsing do corpo da função
                 parseFunc();
+
+                //limparEscopo(ESC_LOCAL);
+
+                escopoAtual = ESC_GLOBAL;
+
             } else {
                 parseError("Esperado ';' ou '{' após declaração de função");
             }
@@ -264,8 +272,14 @@ void parseDecl() {
             // ✅ registra nome da função atual
             setFuncaoAtual(nomeFunc);
 
+            limparEscopo(ESC_LOCAL);
+            escopoAtual = ESC_LOCAL;
+
             // ✅ Continua o parsing do corpo da função
             parseFunc();
+
+            escopoAtual = ESC_GLOBAL;
+
         } else {
             parseError("Esperado ';' ou '{' após declaração de função void");
         }
@@ -528,12 +542,29 @@ void parseAtrib() {
 // expr ::= expr_simp [ op_rel  expr_simp ] 
 void parseExpr() {
     parseExprSimp();
+
+    const char* tipoAntesOperadorRel = getTipoExpressao();  // <-- O ESQUERDO 
+
     if (currentToken.type == TOKEN_EQ || currentToken.type == TOKEN_NEQ ||
         currentToken.type == TOKEN_LT || currentToken.type == TOKEN_GT ||
         currentToken.type == TOKEN_LEQ || currentToken.type == TOKEN_GEQ) {
-        advance(); // consome operador relacional
-        parseExprSimp();
+        
+        advance(); // consome o operador relacional
+
+        parseExprSimp();  // <-- O DIREITO 
+
+        const char* tipoDepoisOperadorRel = getTipoExpressao();
+
+        if (!(strcmp(tipoAntesOperadorRel, "int") == 0 || strcmp(tipoAntesOperadorRel, "char") == 0) ||
+            !(strcmp(tipoDepoisOperadorRel, "int") == 0 || strcmp(tipoDepoisOperadorRel, "char") == 0)) {
+            fprintf(stderr, "[ERRO SEMÂNTICO] Operadores relacionais requerem operandos do tipo int ou char (não bool)\n");
+            setTipoExpressao("erro");
+        } else {
+            registrarTipoRelacional(); // resultado será bool
+        }
+
     }
+
     printf("[EXPR] Expressão reconhecida (expr)\n");
 }
 
@@ -544,12 +575,29 @@ void parseExprSimp() {
     }
 
     parseTermo();
+    const char* tipoAnterior = getTipoExpressao();
 
     while (currentToken.type == TOKEN_PLUS || 
            currentToken.type == TOKEN_MINUS || 
            currentToken.type == TOKEN_OR) {
+        
+        int operador = currentToken.type;  // salva operador atual
         advance(); // consome operador
+
         parseTermo();
+
+        if (operador == TOKEN_OR) {
+            if (strcmp(tipoAnterior, "bool") != 0 || strcmp(getTipoExpressao(), "bool") != 0) {
+                fprintf(stderr, "[ERRO SEMÂNTICO] Operador || requer operandos do tipo bool\n");
+                setTipoExpressao("erro");  // <<< ESSENCIAL: marca erro para impedir propagação
+            } else {
+                registrarTipoLogico();  // resultado será bool
+            }
+        } else {
+            setTipoExpressao(tipoDominanteAritmetico(tipoAnterior, getTipoExpressao()));
+        }
+
+        tipoAnterior = getTipoExpressao(); // atualiza para próxima iteração
     }
 
     printf("[EXPR] Expressão reconhecida (expr_simp)\n");
@@ -558,12 +606,29 @@ void parseExprSimp() {
 // termo ::= fator {(* | / | &&)  fator} 
 void parseTermo() {
     parseFator();
+    const char* tipoAnterior = getTipoExpressao();  
 
     while (currentToken.type == TOKEN_MUL || 
            currentToken.type == TOKEN_DIV || 
            currentToken.type == TOKEN_AND) {
+        
+        int operador = currentToken.type;
         advance(); // consome operador
         parseFator();
+        const char* tipoAtual = getTipoExpressao();
+
+        if (operador == TOKEN_AND) {
+            if (strcmp(tipoAnterior, "bool") != 0 || strcmp(tipoAtual, "bool") != 0) {
+                fprintf(stderr, "[ERRO SEMÂNTICO] Operador && requer operandos do tipo bool\n");
+                setTipoExpressao("erro");  // <<< ESSENCIAL: impede atribuição com tipo errado
+            } else {
+                registrarTipoLogico();
+            }
+        } else {
+            setTipoExpressao(tipoDominanteAritmetico(tipoAnterior, tipoAtual));
+        }
+
+        tipoAnterior = getTipoExpressao();  // atualiza
     }
 
     printf("[EXPR] Expressão reconhecida (termo)\n");
@@ -621,15 +686,19 @@ void parseFator() {
         parseExpr();
         parseEat(TOKEN_RPAREN);
     }
-    else if (strcmp(currentToken.lexeme, "!") == 0) {
+    else if (currentToken.type == TOKEN_NOT) {
         advance();
         parseFator();
+        if (strcmp(getTipoExpressao(), "bool") != 0) {
+            fprintf(stderr, "[ERRO SEMÂNTICO] Operador ! requer operando do tipo bool\n");
+            setTipoExpressao("erro");
+        } else {
+            registrarTipoLogico();  // só registra se for bool de verdade
+        }
     }
     else {
         parseError("Fator inválido");
     }
-
-    //analisarTokenAtual(currentToken);
 }
 
 // ==============================
@@ -765,19 +834,13 @@ void parseTipoParam() {
         isVetor = 1;
     }
 
-    // Imprime o tipo de parâmetro detectado
+    // ao chamar registrarParametro
     if (porReferencia) {
-        
-        printf("[PARAM] Parâmetro por referência: &%s\n", nome);
-        registrarParametro(tipoStr, nome, CLASSE_PARAM);
+        registrarParametro(tipoStr, nome, CLASSE_PARAM, ESC_LOCAL, 1);
     } else if (isVetor) {
-        
-        printf("[PARAM] Parâmetro vetor: %s[]\n", nome);
-        registrarParametro(tipoStr, nome, CLASSE_VETOR);
+        registrarParametro(tipoStr, nome, CLASSE_VETOR, ESC_LOCAL, 1);
     } else {
-        
-        printf("[PARAM] Parâmetro comum: %s\n", nome);
-        registrarParametro(tipoStr, nome, CLASSE_PARAM);
+        registrarParametro(tipoStr, nome, CLASSE_PARAM, ESC_LOCAL, 1);
     }
 }
 

@@ -2,9 +2,6 @@
 #include <string.h>
 #include "symbols.h"
 
-// Tabela de símbolos visível globalmente (para debug ou inspeção externa)
-Simbolo tabelaSimbolos[MAX_SIMBOLOS];
-int numSimbolos = 0;
 
 // Escopo atual do compilador (inicia como global)
 Escopo escopoAtual = ESC_GLOBAL;
@@ -28,9 +25,11 @@ void inicializarTabela() {
 
 // Insere um novo símbolo na tabela de símbolos
 int inserirSimbolo(const char* nome, const char* tipo, Classe classe, Escopo escopo, int tamanho) {
-    // Verifica se já existe símbolo com mesmo nome e escopo
+    // Verifica se já existe símbolo com mesmo nome e escopo e estado ativo
     for (int i = 0; i < nSimbolos; i++) {
-        if (strcmp(tabela[i].nome, nome) == 0 && tabela[i].escopo == escopo) {
+        if (strcmp(tabela[i].nome, nome) == 0 && 
+            tabela[i].escopo == escopo && 
+            tabela[i].estado == ESTADO_VIVO) {
             fprintf(stderr, "Erro: símbolo '%s' já declarado neste escopo.\n", nome);
             return 0;  // erro de duplicação
         }
@@ -159,19 +158,12 @@ void registrarFuncao(const char* tipo, const char* nome, int nParams, char tipos
 }
 
 // Registra um parâmetro de função (vetor, valor ou por referência)
-void registrarParametro(const char* tipo, const char* nome, Classe classe) {
-    int tamanho = (classe == CLASSE_VETOR) ? 0 : 1;
-    if (!inserirSimbolo(nome, tipo, classe, ESC_LOCAL, tamanho)) {
+void registrarParametro(const char* tipo, const char* nome, Classe classe, Escopo escopo, int tamanho) {
+    if (!inserirSimbolo(nome, tipo, classe, escopo, tamanho)) {
         fprintf(stderr, "Erro ao registrar parâmetro: %s\n", nome);
-    } else {
-        printf("[TABELA] Registrado parâmetro: %s | Tipo: %s | Classe: %s\n",
-               nome, tipo,
-               classe == CLASSE_PARAM ? "param" :
-               classe == CLASSE_VETOR ? "vetor param" :
-               classe == CLASSE_VAR   ? "var" :
-               "desconhecida");
     }
 }
+
 
 // Registra uma variável local (vetor ou não)
 void registrarVariavelLocal(const char* tipo, const char* nome, int isVetor, int tamanho) {
@@ -189,4 +181,13 @@ Simbolo* buscarSimboloEmEscopos(const char* nome) {
         }
     }
     return NULL;
+}
+
+// symbols.c
+Simbolo* getTabela() {
+    return tabela;
+}
+
+int getNumSimbolos() {
+    return nSimbolos;
 }

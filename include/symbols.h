@@ -40,14 +40,12 @@ typedef struct {
     char tiposParams[MAX_PARAM][10];  // tipo de cada parâmetro, na ordem
 } Simbolo;
 
-// Array com todos os símbolos registrados
-extern Simbolo tabelaSimbolos[MAX_SIMBOLOS];
-
-// Número atual de símbolos registrados na tabela
-extern int numSimbolos;
-
 // Escopo atual do compilador (global ou local)
 extern Escopo escopoAtual;
+
+// symbols.h
+Simbolo* getTabela();
+int getNumSimbolos();
 
 // ===== Interface pública da tabela de símbolos =====
 
@@ -75,7 +73,7 @@ void registrarVariavelGlobal(const char* tipo, const char* nome, int isVetor, in
 void registrarFuncao(const char* tipo, const char* nome, int nParams, char tiposParams[][10]);
 
 // Registra um parâmetro de função (normal, por ref, ou vetor)
-void registrarParametro(const char* tipo, const char* nome, Classe classe);
+void registrarParametro(const char* tipo, const char* nome, Classe classe, Escopo escopo, int tamanho);
 
 // Registra uma variável local (tipo, nome, se é vetor e tamanho)
 void registrarVariavelLocal(const char* tipo, const char* nome, int isVetor, int tamanho);

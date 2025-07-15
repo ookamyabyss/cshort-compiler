@@ -1,3 +1,6 @@
-int h() {
-    int x;
-} // ERRO ✔️
+int f() {
+    bool b;
+    char nome[10];
+    b = true < false;   // ERRO: bool em operação relacional
+    return 0;
+}

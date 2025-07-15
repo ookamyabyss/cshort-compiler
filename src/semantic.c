@@ -121,6 +121,9 @@ void registrarTipoConstante(Token token) {
         case TOKEN_BOOLCON:
             registrarTipoExpressao("bool");
             break;
+        case TOKEN_STRINGCON:
+            registrarTipoExpressao("char[]");
+            break;
         default:
             break;
     }
@@ -133,7 +136,7 @@ void analisarTokenAtual(Token token) {
 
     // Identificador? Pode ser variável OU função chamada numa expressão
     if (token.type == TOKEN_ID) {
-        Simbolo* s = buscarSimboloEmEscopos(token.lexeme);  // <-- troca feita aqui!
+        Simbolo* s = buscarSimboloEmEscopos(token.lexeme);
 
         if (s == NULL) {
             erroSemantico("Identificador usado mas não declarado", token.lexeme);
@@ -141,8 +144,15 @@ void analisarTokenAtual(Token token) {
 
         garantirTipoDefinido(s->tipo, s->nome);
 
-        // Considera que o uso é numa expressão
-        registrarTipoExpressao(s->tipo);
+        // Se for vetor (tipo termina com "[]"), registrar tipo base
+        if (strstr(s->tipo, "[]") != NULL) {
+            char tipoBase[10];
+            strncpy(tipoBase, s->tipo, strlen(s->tipo) - 2);
+            tipoBase[strlen(s->tipo) - 2] = '\0';
+            registrarTipoExpressao(tipoBase);
+        } else {
+            registrarTipoExpressao(s->tipo);
+        }
     }
 }
 
@@ -188,8 +198,10 @@ void verificarDefinicaoDeFuncao(const char* nome) {
         erroSemantico("Erro ao definir função", nome);
     }
 
-    // Marcar como definida (você pode acessar diretamente o último símbolo inserido)
-    tabelaSimbolos[numSimbolos - 1].foiDefinida = true;
+    // Marcar como definida o último símbolo real da tabela
+    Simbolo* tabela = getTabela();
+    int n = getNumSimbolos();
+    tabela[n - 1].foiDefinida = true;
 }
 
 // Verifica se assinatura da definição bate com o protótipo anterior
@@ -232,17 +244,18 @@ void verificarVoidEmFuncaoSemParametros(int nParams, char tiposParams[][10], con
     }
 }
 
-
-
-
+// Verifica se o tipo de uma variável ou função está corretamente definido
 void garantirTipoDefinido(const char* tipo, const char* nome) {
     if (tipo == NULL || strcmp(tipo, "") == 0 || strcmp(tipo, "tipo") == 0) {
         erroSemantico("Tipo da variável ou função não foi definido corretamente", nome);
     }
 }
 
-// Função auxiliar para verificar se dois tipos são compatíveis
+// Retorna se dois tipos são semanticamente compatíveis
 bool tiposSaoCompatíveis(const char* tipo1, const char* tipo2) {
+    // Se algum for "erro", nunca é compatível
+    if (strcmp(tipo1, "erro") == 0 || strcmp(tipo2, "erro") == 0) return false;
+
     // Mesmos tipos
     if (strcmp(tipo1, tipo2) == 0) return true;
 
@@ -252,21 +265,23 @@ bool tiposSaoCompatíveis(const char* tipo1, const char* tipo2) {
         return true;
     }
 
-    // Expressão relacional gera "bool", compatível com "int"
+    // bool <-> int (permitido em atribuição)
     if ((strcmp(tipo1, "bool") == 0 && strcmp(tipo2, "int") == 0) ||
         (strcmp(tipo1, "int") == 0 && strcmp(tipo2, "bool") == 0)) {
         return true;
     }
 
-    // Vetores (exatamente mesmo tipo com "[]")
+    // Vetores idênticos
     if ((strcmp(tipo1, "int[]") == 0 && strcmp(tipo2, "int[]") == 0) ||
         (strcmp(tipo1, "char[]") == 0 && strcmp(tipo2, "char[]") == 0)) {
         return true;
     }
 
-    return false; // não compatível
+    // Incompatível
+    return false;
 }
 
+// Verifica se função com retorno está sendo usada como expressão
 void verificarUsoDeFuncaoEmExpressao(const char* nome) {
     Simbolo* s = buscarSimboloEmEscopos(nome);
     if (!s || s->classe != CLASSE_FUNCAO) {
@@ -282,6 +297,7 @@ void verificarUsoDeFuncaoEmExpressao(const char* nome) {
     registrarTipoExpressao(s->tipo);
 }
 
+// Verifica se função com valor de retorno está sendo usada como comando
 void verificarUsoDeFuncaoComoComando(const char* nome) {
     Simbolo* s = buscarSimboloEmEscopos(nome);
     if (!s || s->classe != CLASSE_FUNCAO) {
@@ -295,6 +311,7 @@ void verificarUsoDeFuncaoComoComando(const char* nome) {
     }
 }
 
+// Verifica se há erro de retorno de valor em função `void`
 void verificarReturnComValor() {
     if (!nomeFuncaoAtual) return;
 
@@ -309,6 +326,7 @@ void verificarReturnComValor() {
 
 }
 
+// Verifica se há erro de `return;` em função com retorno
 void verificarReturnSemValor() {
     if (!nomeFuncaoAtual) return;
 
@@ -320,12 +338,14 @@ void verificarReturnSemValor() {
     }
 }
 
+// Armazena o nome da função atualmente sendo analisada
 void setFuncaoAtual(const char* nome) {
     nomeFuncaoAtual = nome;
     encontrouReturnComValor = false;  // reset ao entrar na função
 
 }
 
+// Verifica se função com tipo de retorno tem pelo menos um `return expr;`
 void verificarFuncaoComRetornoObrigatorio() {
     if (!nomeFuncaoAtual) return;
 
@@ -335,4 +355,59 @@ void verificarFuncaoComRetornoObrigatorio() {
     if (strcmp(func->tipo, "void") != 0 && !encontrouReturnComValor) {
         erroSemantico("Função com valor de retorno deve conter pelo menos um 'return expr;'", func->nome);
     }
+}
+
+void registrarTipoRelacional() {
+    registrarTipoExpressao("bool");
+}
+
+void registrarTipoLogico() {
+    registrarTipoExpressao("bool");
+}
+
+const char* tipoDominanteAritmetico(const char* t1, const char* t2) {
+    // Se algum dos dois for vetor, não é permitido
+    if (tipoEhVetor(t1) || tipoEhVetor(t2)) {
+        fprintf(stderr, "[ERRO SEMÂNTICO] Operações aritméticas não são permitidas com vetores\n");
+        return "erro";
+    }
+
+    // Só aceitamos int e char como tipos válidos
+    bool valido1 = strcmp(t1, "int") == 0 || strcmp(t1, "char") == 0;
+    bool valido2 = strcmp(t2, "int") == 0 || strcmp(t2, "char") == 0;
+
+    if (!valido1 || !valido2) {
+        fprintf(stderr, "[ERRO SEMÂNTICO] Tipos incompatíveis para operação aritmética: %s e %s\n", t1, t2);
+        return "erro";
+    }
+
+    // Regra: int + char → int
+    if (strcmp(t1, "int") == 0 || strcmp(t2, "int") == 0) {
+        return "int";
+    }
+
+    // Se ambos forem char, resultado é char
+    return "char";
+}
+
+const char* getTipoExpressao() {
+    return tipoExpressao;
+}
+
+void setTipoExpressao(const char* tipo) {
+    tipoExpressao = tipo;
+}
+
+bool tipoEhVetor(const char* tipo) {
+    return strstr(tipo, "[]") != NULL;
+}
+
+static char ultimoTipoExpr[16] = "";
+
+void setUltimoTipoExpr(const char* tipo) {
+    strncpy(ultimoTipoExpr, tipo, sizeof(ultimoTipoExpr));
+}
+
+const char* getUltimoTipoExpr() {
+    return ultimoTipoExpr;
 }

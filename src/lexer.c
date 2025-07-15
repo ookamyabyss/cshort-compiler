@@ -39,6 +39,7 @@ const char* tokenTypeName(TokenType type) {
         case TOKEN_MINUS: return "-";
         case TOKEN_MUL: return "*";
         case TOKEN_DIV: return "/";
+        case TOKEN_NOT: return "!";
         case TOKEN_LT: return "<";
         case TOKEN_LEQ: return "<=";
         case TOKEN_GT: return ">";
@@ -292,14 +293,14 @@ Token getNextToken() {
                 lastChar = nextChar();
                 return makeToken(TOKEN_EQ, "==", line, col);
             }
-            return makeToken(TOKEN_ASSIGN, "=", line, col);
+                return makeToken(TOKEN_ASSIGN, "=", line, col);
         case '!':
             lastChar = nextChar();
             if (lastChar == '=') {
                 lastChar = nextChar();
                 return makeToken(TOKEN_NEQ, "!=", line, col);
             }
-            return makeToken(TOKEN_INVALID, "!", line, col);
+            return makeToken(TOKEN_NOT, "!", line, col);
         case '<':
             lastChar = nextChar();
             if (lastChar == '=') {

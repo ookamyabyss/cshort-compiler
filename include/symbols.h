@@ -5,7 +5,6 @@
 #define MAX_SIMBOLOS 1024
 #define MAX_PARAM 10
 
-
 // Escopo possível de um símbolo (global ou local)
 typedef enum {
     ESC_GLOBAL,

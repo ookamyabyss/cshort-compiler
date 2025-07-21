@@ -6,6 +6,7 @@
 #include "symbols.h"
 
 #define MAX_PARAMS_FUNCAO 32
+#define MAX_ARGS 10
 
 extern char tiposParamsTemp[MAX_PARAMS_FUNCAO][10];
 extern char nomesParamsTemp[MAX_PARAMS_FUNCAO][256];
@@ -34,10 +35,10 @@ void parseFunc(void);         // func ::= tipo/void id(...) '{' {decl_var} {cmd}
 void parseCmd(void);          // cmd ::= if, while, for, return, atrib, chamada, bloco, ';'
 void parseAtrib(void);        // atrib ::= id [ '[' expr ']' ] = expr
 
-void parseExpr(void);         // expr ::= expr_simp [ op_rel expr_simp ]
-void parseExprSimp(void);     // expr_simp ::= [+|-] termo {(+|-|or) termo}
-void parseTermo(void);        // termo ::= fator {(*|/|and) fator}
-void parseFator(void);        // fator ::= id[...] | constantes | chamada | (!fator)
+char*  parseExpr(void);         // expr ::= expr_simp [ op_rel expr_simp ]
+char*  parseExprSimp(void);     // expr_simp ::= [+|-] termo {(+|-|or) termo}
+char*  parseTermo(void);        // termo ::= fator {(*|/|and) fator}
+char*  parseFator(void);        // fator ::= id[...] | constantes | chamada | (!fator)
 
 // ==============================
 // Funções auxiliares de análise

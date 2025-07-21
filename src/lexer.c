@@ -20,10 +20,10 @@ static int lastChar = ' ';
 
 // Lista de palavras-chave reconhecidas pela linguagem
 #define MAX_KEYWORDS 16
+
 const char* keywords[] = {
     "if", "else", "while", "for", "return",
-    "int", "float", "char", "void", "string",
-    "break", "continue", "do", "switch", "case", "default"
+    "int", "float", "char", "void", "bool"
 };
 
 const char* tokenTypeName(TokenType type) {
@@ -64,7 +64,7 @@ const char* tokenTypeName(TokenType type) {
     }
 }
 
-const int numKeywords = 16;
+const int numKeywords = 10;
 
 // ==============================
 // FUNÇÕES AUXILIARES
@@ -172,16 +172,8 @@ Token getNextToken() {
         else if (strcmp(lexeme, "for") == 0)  return makeToken(TOKEN_KEYWORD_FOR, lexeme, line, col);
         else if (strcmp(lexeme, "return") == 0) return makeToken(TOKEN_KEYWORD_RETURN, lexeme, line, col);
         else if (strcmp(lexeme, "void") == 0) return makeToken(TOKEN_KEYWORD_VOID, lexeme, line, col);
-        else if (strcmp(lexeme, "break") == 0) return makeToken(TOKEN_KEYWORD_BREAK, lexeme, line, col);
-        else if (strcmp(lexeme, "continue") == 0) return makeToken(TOKEN_KEYWORD_CONTINUE, lexeme, line, col);
-        else if (strcmp(lexeme, "do") == 0) return makeToken(TOKEN_KEYWORD_DO, lexeme, line, col);
-        else if (strcmp(lexeme, "switch") == 0) return makeToken(TOKEN_KEYWORD_SWITCH, lexeme, line, col);
-        else if (strcmp(lexeme, "case") == 0) return makeToken(TOKEN_KEYWORD_CASE, lexeme, line, col);
-        else if (strcmp(lexeme, "default") == 0) return makeToken(TOKEN_KEYWORD_DEFAULT, lexeme, line, col);
-        else if (strcmp(lexeme, "string") == 0) return makeToken(TOKEN_KEYWORD_STRING, lexeme, line, col);
         else if (strcmp(lexeme, "true") == 0 || strcmp(lexeme, "false") == 0) return makeToken(TOKEN_BOOLCON, lexeme, line, col);
         else return makeToken(TOKEN_ID, lexeme, line, col);
-        return makeToken(TOKEN_ID, lexeme, line, col);
     }
 
     // Constantes numéricas (inteiras ou reais)

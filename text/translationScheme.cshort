@@ -1,0 +1,62 @@
+/*
+================================================================================
+Esquema de Tradução para comando if-else no compilador Cshort
+
+Exemplo em C:
+
+    if (A > B) {
+        comandos_if;
+    } else {
+        comandos_else;
+    }
+
+Tradução gerada:
+
+    LOAD A           // carrega valor de A
+    LOAD B           // carrega valor de B
+    SUB              // A - B (positivo se A > B)
+    GOTRUE L1        // se resultado > 0, vai para L1 (bloco do if)
+
+    GOTO L2          // senão, pula o if e vai para o else
+
+LABEL L1:            // início do bloco if
+    ...              // comandos do bloco if
+    GOTO L3          // pula o else e vai para o fim do if-else
+
+LABEL L2:            // início do bloco else
+    ...              // comandos do bloco else
+
+LABEL L3:            // fim do if-else
+================================================================================
+*/
+
+/*
+================================================================================
+Esquema de Tradução para comando while no compilador Cshort
+
+Exemplo em C:
+
+    while (A > B) {
+        comandos_do_corpo;
+    }
+
+Tradução gerada:
+
+LABEL L1:            // início do while (avalia a condição)
+    LOAD A           // carrega valor de A
+    LOAD B           // carrega valor de B
+    SUB              // A - B
+    GOTRUE L2        // se A > B, vai para corpo do while
+
+    GOTO L3          // senão, vai para o fim do while
+
+LABEL L2:            // início do corpo do while
+    ...              // comandos_do_corpo
+    GOTO L1          // volta para reavaliar a condição
+
+LABEL L3:            // fim do while
+================================================================================
+*/
+
+
+

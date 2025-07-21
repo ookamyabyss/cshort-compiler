@@ -5,48 +5,54 @@
 
 #define TAM_MAX_LEXEMA 128
 
-// Tipos de tokens reconhecidos
+// Tipos primitivos de token literal usados internamente
+#define TOKEN_INT_LITERAL 301
+#define TOKEN_CHAR_LITERAL 302
+
+// Enumeração de todos os tipos de tokens reconhecidos
 typedef enum {
-    TOKEN_ID,          // Identificador
-    TOKEN_INTCON,      // Constante inteira
-    TOKEN_REALCON,     // Constante real
-    TOKEN_CHARCON,     // Constante de caractere comum ex: 'a'
-    TOKEN_CHARCON_N,   // Constante de caractere '\n'
-    TOKEN_CHARCON_0,   // Constante de caractere '\0'
-    TOKEN_STRINGCON,   // Constante string
+    // Identificadores e literais
+    TOKEN_ID,              // Identificador
+    TOKEN_INTCON,          // Constante inteira (ex: 10)
+    TOKEN_REALCON,         // Constante real (ex: 3.14)
+    TOKEN_CHARCON,         // Constante de caractere comum (ex: 'a')
+    TOKEN_CHARCON_N,       // Constante de caractere especial '\n'
+    TOKEN_CHARCON_0,       // Constante de caractere nulo '\0'
+    TOKEN_BOOLCON,         // Constantes booleanas: true / false
+    TOKEN_STRINGCON,       // Constante string
 
-    // Operadores aritméticos
-    TOKEN_PLUS,       // +
-    TOKEN_MINUS,      // -
-    TOKEN_MUL,        // *
-    TOKEN_DIV,        // /
-    TOKEN_NOT,        // !
+    // Operadores aritméticos e lógicos
+    TOKEN_PLUS,            // +
+    TOKEN_MINUS,           // -
+    TOKEN_MUL,             // *
+    TOKEN_DIV,             // /
+    TOKEN_NOT,             // !
 
-    // Operadores relacionais e lógicos
-    TOKEN_EQ,         // ==
-    TOKEN_NEQ,        // !=
-    TOKEN_LT,         // <
-    TOKEN_GT,         // >
-    TOKEN_LEQ,        // <=
-    TOKEN_GEQ,        // >=
-    TOKEN_ASSIGN,     // =
-    TOKEN_BITAND,     // &
-    TOKEN_AND,        // &&
-    TOKEN_OR,         // ||
+    // Operadores relacionais e de atribuição
+    TOKEN_EQ,              // ==
+    TOKEN_NEQ,             // !=
+    TOKEN_LT,              // <
+    TOKEN_GT,              // >
+    TOKEN_LEQ,             // <=
+    TOKEN_GEQ,             // >=
+    TOKEN_ASSIGN,          // =
+
+    // Operadores lógicos binários
+    TOKEN_BITAND,           // &
+    TOKEN_AND,             // &&
+    TOKEN_OR,              // ||
 
     // Delimitadores
-    TOKEN_LPAREN,     // (
-    TOKEN_RPAREN,     // )
-    TOKEN_LBRACK,     // [
-    TOKEN_RBRACK,     // ]
-    TOKEN_LBRACE,     // {
-    TOKEN_RBRACE,     // }
-    TOKEN_SEMICOLON,  // ;
-    TOKEN_COMMA,      // ,
+    TOKEN_LPAREN,          // (
+    TOKEN_RPAREN,          // )
+    TOKEN_LBRACK,          // [
+    TOKEN_RBRACK,          // ]
+    TOKEN_LBRACE,          // {
+    TOKEN_RBRACE,          // }
+    TOKEN_SEMICOLON,       // ;
+    TOKEN_COMMA,           // ,
 
-    TOKEN_BOOLCON,   // ✅ suporte a true e false
-
-    // Palavras-chave específicas
+    // Palavras-chave da linguagem C.Short
     TOKEN_KEYWORD_INT,
     TOKEN_KEYWORD_CHAR,
     TOKEN_KEYWORD_FLOAT,
@@ -57,43 +63,37 @@ typedef enum {
     TOKEN_KEYWORD_RETURN,
     TOKEN_KEYWORD_FOR,
     TOKEN_KEYWORD_VOID,
-    TOKEN_KEYWORD_BREAK,
-    TOKEN_KEYWORD_CONTINUE,
-    TOKEN_KEYWORD_DO,
-    TOKEN_KEYWORD_SWITCH,
-    TOKEN_KEYWORD_CASE,
-    TOKEN_KEYWORD_DEFAULT,
-    TOKEN_KEYWORD_STRING,
 
     // Outros
-    TOKEN_EOF,
-    TOKEN_INVALID
+    TOKEN_EOF,             // Fim de arquivo
+    TOKEN_INVALID          // Token inválido (erro léxico)
 } TokenType;
 
-// Estrutura principal de um token
+// Estrutura que representa um token identificado pelo lexer
 typedef struct {
-    TokenType type;       // Tipo principal do token
+    TokenType type;                 // Tipo do token
 
     union {
-        int intVal;       // Se TOKEN_INTCON
-        float realVal;    // Se TOKEN_REALCON
-        char charVal;     // Se TOKEN_CHARCON
-        char* strVal;     // Se TOKEN_STRINGCON, TOKEN_ID ou palavra-chave
+        int intVal;                // Valor inteiro (se TOKEN_INTCON)
+        float realVal;             // Valor real (se TOKEN_REALCON)
+        char charVal;              // Valor char (se TOKEN_CHARCON)
+        char* strVal;              // Valor string (ID, palavras-chave, strings)
     };
 
-    char lexeme[TAM_MAX_LEXEMA]; // Lexema original
-    int line;           // Linha de origem
-    int column;         // Coluna inicial
+    char lexeme[TAM_MAX_LEXEMA];   // Lexema original como aparece no código
+    int line;                      // Linha em que o token aparece
+    int column;                    // Coluna inicial do token
 } Token;
 
-// Variável global para controle de linha 
+// Variável global de controle de linha (atualizada pelo lexer)
 extern int contLinha;
 
-// Funções do analisador léxico
-void initLexer(FILE* source);   // Inicializa com um arquivo fonte
-Token getNextToken();           // Retorna próximo token
-void destroyLexer();            // Libera recursos
+// Funções principais do analisador léxico
+void initLexer(FILE* source);        // Inicializa o lexer com um arquivo fonte
+Token getNextToken();                // Retorna o próximo token do código-fonte
+void destroyLexer();                 // Libera memória ou buffers usados pelo lexer
 
+// Utilitário para obter o nome textual de um tipo de token
 const char* tokenTypeName(TokenType type);
 
 #endif 

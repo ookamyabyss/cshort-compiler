@@ -5,6 +5,8 @@
 #include "parser.h" 
 #include "symbols.h"
 #include "semantic.h"
+#include "codegen.h"  
+
 
 // Função principal: entrada do compilador
 int main(int argc, char* argv[]) {
@@ -21,6 +23,8 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
+    iniciarCodegen("optimus.prime");  // ou qualquer nome desejado
+
     // Inicia o parser: análise léxica, sintática e preenchimento da tabela de símbolos
     startParser(f);
 
@@ -30,8 +34,12 @@ int main(int argc, char* argv[]) {
     // Imprime a tabela de símbolos resultante (para depuração)
     imprimirTabela();
 
+    // Aqui você chamaria as funções de geração conforme a árvore sintática, por enquanto apenas simula
+    finalizarCodegen();
+
     // Fecha o arquivo de entrada
     fclose(f);
+
 
     return 0;
 }

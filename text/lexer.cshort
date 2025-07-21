@@ -1,0 +1,54 @@
+/*
+================================================================================
+📘 Analisador Léxico - Compilador Cshort
+
+O analisador léxico (ou lexer/scanner) tem como função ler o código-fonte caracter por caracter e agrupar 
+esses caracteres em tokens válidos da linguagem Cshort. Ele é a primeira etapa da compilação, 
+responsável por identificar elementos como:
+
+- Palavras-chave (int, char, if, etc.)
+- Identificadores (nomes de variáveis e funções)
+- Números inteiros e caracteres
+- Operadores (+, -, ==, &&, etc.)
+- Delimitadores ((, ), {, }, ;, etc.)
+
+🧱 Estrutura Geral
+
+    lexer.h: define os tokens possíveis (via enum) e declara funções.
+
+    lexer.c: implementa a lógica de leitura e identificação dos tokens.
+
+🔤 Como o Lexer Funciona
+
+1° Inicialização:
+
+- A função initLexer(FILE* arquivo) recebe um arquivo-fonte já aberto e configura o lexer para começar a leitura.
+- A variável linhaAtual é usada para rastrear o número da linha (útil para mensagens de erro).
+
+2° Avanço:
+
+- A função nextChar() lê o próximo caractere do arquivo.
+- ungetChar() retorna um caractere para o fluxo (lookahead).
+
+3° Tokenização:
+
+- A função principal é proximoToken(). Ela:
+    - Ignora espaços em branco e comentários.
+    - Detecta qual tipo de token está sendo lido com base no primeiro caractere.
+    - Usa switch-case e if para tratar cada grupo de caracteres (ex: letras, dígitos, operadores).
+
+4° Reconhecimento:
+
+- Identificadores e palavras-chave:
+    Se começa com letra, continua lendo letras/dígitos. Depois verifica se é uma palavra-chave.
+- Números inteiros:
+    Se começa com dígito, continua lendo até acabar. Retorna TOKEN_NUM.
+- Caracteres:
+    Entre aspas simples 'a', verifica se o caractere é válido.
+- Operadores e delimitadores:
+    Detecta ==, !=, &&, ||, <=, >=, =, +, -, *, /, (, ), [, ], {, }, ;, ,, etc.
+- Erro léxico:
+    Caso algo inválido apareça, gera um TOKEN_ERRO com mensagem.
+
+/*
+================================================================================

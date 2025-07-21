@@ -88,6 +88,10 @@ void iniciarAtribuicao(const char* nome) {
 
 // Registra o tipo da expressão analisada (lado direito da atribuição)
 void registrarTipoExpressao(const char* tipo) {
+    if (tipo == NULL) {
+        tipoExpressao = "desconhecido";  // ← ou apenas retorne sem registrar
+        return;
+    }
     tipoExpressao = tipo;
 }
 
@@ -116,7 +120,7 @@ void registrarTipoConstante(Token token) {
         case TOKEN_CHARCON:
         case TOKEN_CHARCON_0:
         case TOKEN_CHARCON_N:
-            registrarTipoExpressao("char");
+            registrarTipoExpressao("int");
             break;
         case TOKEN_BOOLCON:
             registrarTipoExpressao("bool");
@@ -153,6 +157,7 @@ void analisarTokenAtual(Token token) {
         } else {
             registrarTipoExpressao(s->tipo);
         }
+        
     }
 }
 
@@ -410,4 +415,8 @@ void setUltimoTipoExpr(const char* tipo) {
 
 const char* getUltimoTipoExpr() {
     return ultimoTipoExpr;
+}
+
+bool tipoEhNumerico(const char* tipo) {
+    return strcmp(tipo, "int") == 0 || strcmp(tipo, "char") == 0 || strcmp(tipo, "float") == 0;
 }

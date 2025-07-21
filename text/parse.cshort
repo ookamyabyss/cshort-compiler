@@ -1,0 +1,53 @@
+/*
+================================================================================
+📘 Analisador Sintatico - Compilador Cshort
+
+Ele verifica se a sequência de tokens reconhecida pelo analisador léxico está organizada de 
+acordo com as regras gramaticais da linguagem.
+
+🔄 Como ele funciona?
+
+Ele segue o estilo descendente recursivo:
+    - Cada regra gramatical da linguagem vira uma função em C.
+    - O parser consome tokens um a um usando advance().
+    - Quando um token não bate com o esperado, dispara um erro com parseError().
+
+🧠 Exemplo de funcionamento
+    Se tivermos um código: int x;
+
+O parser faz:
+
+1° parseProg() chama parseDecl().
+
+2° parseDecl() detecta int → chama parseTipo().
+
+3° Depois vê x → reconhece declaração de variável.
+
+4° Chama parseDeclVar(), que trata o nome e possível vetor.
+
+5° Confirma ; com parseEat(TOKEN_SEMICOLON).
+
+Se tudo estiver correto, prossegue. Se faltar ; ou tiver token inválido, o erro é reportado com linha e coluna.
+
+
+📦 Principais Componentes
+ Função	Responsabilidade
+    startParser()  ->  Inicia o parser e começa análise.
+    parseProg()  ->  Regra inicial: programa é uma sequência de declarações.
+    parseDecl()  ->  Detecta se é função ou variável.
+    parseTipo()  ->  Reconhece tipos primitivos (int, float etc).
+    parseFunc()  ->  Reconhece corpo de função entre {}.
+    parseDeclVar*()  ->  Trata declaração de variáveis (com ou sem vetor, escopos distintos).
+    parseTiposParam()  ->  Analisa lista de parâmetros da função.
+    obterTipoString()  ->  Mapeia o token do tipo para string (TOKEN_KEYWORD_INT → "int").
+    parseEat()  ->  Garante que o próximo token é do tipo esperado. Se não for, dispara erro fatal.
+
+⚙️ Integrações
+ O parser se integra com:
+
+    Lexer (lexer.h)  ->  Para consumir tokens.
+    Símbolos (symbols.h)  ->  Para registrar variáveis, funções e parâmetros.
+    Semântica (semantic.h)  ->  Para fazer verificações como tipo, duplicidade, escopo.
+
+/*
+================================================================================

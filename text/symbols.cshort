@@ -1,0 +1,37 @@
+/*
+================================================================================
+📘 Tabela de Simbolos - Compilador Cshort
+
+É uma estrutura crítica no compilador, usada para registrar e controlar 
+informações sobre variáveis, funções e parâmetros. 
+
+- Inserção de símbolos com escopo e tipo.
+- Verificações de duplicidade.
+- Remoção lógica via “zumbificação”.
+- Busca com suporte a sombreamento (shadowing).
+- Impressão para depuração.
+
+🔧 1. Estrutura Básica
+
+    tabela: é um vetor estático de símbolos.
+    nSimbolos: contador da quantidade de símbolos cadastrados.
+
+🔧 2. Inserção: inserirSimbolo()
+
+- Verifica se o símbolo já existe no mesmo escopo e está ativo (evita redefinição).
+
+🔧 3. Busca: buscarSimbolo()
+
+- Faz uma busca reversa (do fim ao início) para respeitar escopos aninhados.
+
+🔧 4. Finalização de Escopo: limparEscopo()
+
+- Marca símbolos locais como zumbis (estado inativo), sem removê-los fisicamente.
+- Permite reutilização e histórico.
+
+🔧 5. Debug: imprimirTabela()
+
+- Exibe a tabela de símbolos com
+
+/*
+================================================================================

@@ -2,7 +2,6 @@
 #include <string.h>
 #include "symbols.h"
 
-
 // Escopo atual do compilador (inicia como global)
 Escopo escopoAtual = ESC_GLOBAL;
 
@@ -10,18 +9,21 @@ Escopo escopoAtual = ESC_GLOBAL;
 static Simbolo tabela[MAX_TABELA];
 static int nSimbolos = 0;
 
-// ===================
-// Inicialização
-// ===================
+// symbols.c
+Simbolo* getTabela() {
+    return tabela;
+}
+
+int getNumSimbolos() {
+    return nSimbolos;
+}
+
+// ===== Interface pública da tabela de símbolos =====
 
 // Inicializa a tabela de símbolos (zera o contador)
 void inicializarTabela() {
     nSimbolos = 0;
 }
-
-// ===================
-// Inserção e busca
-// ===================
 
 // Insere um novo símbolo na tabela de símbolos
 int inserirSimbolo(const char* nome, const char* tipo, Classe classe, Escopo escopo, int tamanho) {
@@ -117,9 +119,7 @@ void imprimirTabela() {
     printf("==================================\n");
 }
 
-// ===================
-// Funções auxiliares para o parser
-// ===================
+// ===== Funções auxiliares chamadas pelo parser =====
 
 // Registra uma variável global (vetor ou não)
 void registrarVariavelGlobal(const char* tipo, const char* nome, int isVetor, int tamanho) {
@@ -164,7 +164,6 @@ void registrarParametro(const char* tipo, const char* nome, Classe classe, Escop
     }
 }
 
-
 // Registra uma variável local (vetor ou não)
 void registrarVariavelLocal(const char* tipo, const char* nome, int isVetor, int tamanho) {
     Classe classe = isVetor ? CLASSE_VETOR : CLASSE_VAR;
@@ -181,13 +180,4 @@ Simbolo* buscarSimboloEmEscopos(const char* nome) {
         }
     }
     return NULL;
-}
-
-// symbols.c
-Simbolo* getTabela() {
-    return tabela;
-}
-
-int getNumSimbolos() {
-    return nSimbolos;
 }

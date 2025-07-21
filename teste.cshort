@@ -1,6 +1,12 @@
-int f() {
-    bool b;
-    char nome[10];
-    b = true < false;   // ERRO: bool em operação relacional
+
+int main() {
+
+    while (3 > 2) {} 
+    while (3 < 2) {}
+    while (3 >= 2) {}
+    while (3 <= 2) {} 
+    while (3 == 2) {}
+    while (3 != 2) {} 
+
     return 0;
 }

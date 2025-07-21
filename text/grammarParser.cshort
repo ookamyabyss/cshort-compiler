@@ -1,0 +1,52 @@
+/*
+================================================================================
+
+GRAMATICA
+
+// prog ::= { decl ';' | func } 
+
+// decl ::= tipo decl_var { ',' decl_var}  
+//      | tipo id '(' tipos_param')' { ',' id '(' tipos_param')' } 
+//      | void id '(' tipos_param')' { ',' id '(' tipos_param')' }
+
+// decl_var ::= id [ '[' intcon ']' ]
+
+// tipo ::= char | int | float | bool
+
+// tipos_param ::= void 
+//              | tipo (id | &id | id '[' ']') { ','  tipo (id | &id | id '[' ']') }
+
+// func ::= tipo id '(' tipos_param')' '{' { tipo decl_var{ ',' decl_var} ';' } { cmd } 
+//     '}' 
+//     | void id '(' tipos_param')' '{' { tipo decl_var{ ',' decl_var} ';' } { cmd 
+//     } '}'
+
+// cmd ::= if '(' expr ')' cmd [ else cmd ] 
+//     | while '(' expr ')' cmd 
+//     | for '(' [ atrib ] ';' [ expr ] ';' [ atrib ] ')' cmd 
+//     | return [ expr ] ';' 
+//     | atrib ';' 
+//     | id '(' [expr { ',' expr } ] ')' ';' 
+//     | '{' { cmd } '}' 
+//     | ';' 
+
+// atrib ::= id [ '[' expr ']' ] = expr
+
+// expr ::= expr_simp [ op_rel  expr_simp ]
+
+// expr_simp ::= [+ | – ] termo {(+ | – | ||) termo}
+
+// termo ::= fator {(* | / | &&)  fator}
+
+// fator ::= id [ '[' expr ']' ] | intcon | realcon | charcon |  
+//           id '(' [expr { ',' expr } ] ')'  |  '(' expr ')'  | '!' fator
+
+op_rel ::= ==
+	| !=
+	| <=
+	| <
+	| >=	
+	| >
+
+/*
+================================================================================

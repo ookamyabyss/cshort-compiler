@@ -101,5 +101,6 @@ void setUltimoTipoExpr(const char* tipo);
 
 const char* getUltimoTipoExpr();
 
+bool tiposSaoCompatíveisReturn(const char* tipoFuncao, const char* tipoReturn);
 
 #endif

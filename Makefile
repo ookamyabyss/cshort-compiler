@@ -9,7 +9,8 @@ INCLUDE_DIR = include
 
 # Arquivos
 TARGET = $(BUILD_DIR)/cshort
-OBJS = $(BUILD_DIR)/lexer.o $(BUILD_DIR)/parser.o $(BUILD_DIR)/symbols.o $(BUILD_DIR)/semantic.o $(BUILD_DIR)/main.o
+OBJS = $(BUILD_DIR)/lexer.o $(BUILD_DIR)/parser.o $(BUILD_DIR)/symbols.o \
+       $(BUILD_DIR)/semantic.o $(BUILD_DIR)/codegen.o $(BUILD_DIR)/main.o
 
 # Regra principal
 all: $(TARGET)
@@ -34,12 +35,17 @@ $(BUILD_DIR)/symbols.o: $(SRC_DIR)/symbols.c $(INCLUDE_DIR)/symbols.h | $(BUILD_
 $(BUILD_DIR)/semantic.o: $(SRC_DIR)/semantic.c $(INCLUDE_DIR)/semantic.h $(INCLUDE_DIR)/symbols.h | $(BUILD_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
+# Compila codegen.c
+$(BUILD_DIR)/codegen.o: $(SRC_DIR)/codegen.c $(INCLUDE_DIR)/codegen.h | $(BUILD_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
 # Compila main.c
 $(BUILD_DIR)/main.o: $(SRC_DIR)/main.c \
                     $(INCLUDE_DIR)/lexer.h \
                     $(INCLUDE_DIR)/parser.h \
                     $(INCLUDE_DIR)/symbols.h \
-                    $(INCLUDE_DIR)/semantic.h | $(BUILD_DIR)
+                    $(INCLUDE_DIR)/semantic.h \
+					$(INCLUDE_DIR)/codegen.h | $(BUILD_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 # Cria o diretório build/ se não existir

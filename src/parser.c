@@ -7,6 +7,7 @@
 #include "lexer.h"
 #include "symbols.h"
 #include "semantic.h"
+#include "codegen.h"
 
 // ==============================
 // Variáveis globais
@@ -230,7 +231,6 @@ void parseDecl() {
 
     } else if (currentToken.type == TOKEN_KEYWORD_VOID) {
 
-
         parseEat(TOKEN_KEYWORD_VOID);
 
         char nomeFunc[256];
@@ -395,26 +395,118 @@ void parseCmd() {
         advance();
 
         parseEat(TOKEN_LPAREN);
-        parseExpr();
+
+        char* esq = parseExprSimp();     // A
+        char op[4];                      // operador relacional (ex: ">", "<=")
+        strcpy(op, currentToken.lexeme);
+        advance();                       // consome o operador
+        char* dir = parseExprSimp();     // B
+
         parseEat(TOKEN_RPAREN);
 
-        parseCmd();
+        char* labelFim  = novaLabel();   // label para fim do if/else
+        char* labelThen = novaLabel();   // label para o bloco do if
 
-        if (currentToken.type == TOKEN_KEYWORD_ELSE) {
-            printf("[CMD] Reconhecido bloco 'else'\n");
-            advance();
-            parseCmd();
+        // Geração do código da condição
+        gerarLoad(esq);
+        gerarLoad(dir);
+        gerarSub(); // A - B
+
+        if (strcmp(op, ">") == 0 || strcmp(op, "!=") == 0) {
+            gerarGotoTrue(labelThen);    // se (a - b) > 0 → entra no if
+            gerarGoto(labelFim);
+        } else if (strcmp(op, "<") == 0 || strcmp(op, "==") == 0) {
+            gerarGotoFalse(labelThen);   // se (a - b) == 0 → entra no if (ou < 0)
+            gerarGoto(labelFim);
+        } else if (strcmp(op, ">=") == 0) {
+            gerarGotoFalse(labelFim);    // se resultado < 0, vai pro fim
+            gerarGoto(labelThen);        // senão entra no if
+        } else if (strcmp(op, "<=") == 0) {
+            gerarGotoTrue(labelThen);    // se (a - b) <= 0 → entra no if
+            gerarGoto(labelFim);         // senão, fim
         }
 
-    } else if (currentToken.type == TOKEN_KEYWORD_WHILE) {
+        // Bloco do IF
+        gerarLabel(labelThen);
+        parseCmd();
+
+        // ELSE opcional
+        if (currentToken.type == TOKEN_KEYWORD_ELSE) {
+            advance();
+            char* labelAfterElse = novaLabel();  // fim do else
+            gerarGoto(labelAfterElse);           // salta após o else
+            gerarLabel(labelFim);                // início do else
+            parseCmd();
+            gerarLabel(labelAfterElse);
+            free(labelAfterElse);
+        } else {
+            gerarLabel(labelFim); // fim do if (sem else)
+        }
+
+        // Libera
+        free(esq);
+        free(dir);
+        free(labelThen);
+        free(labelFim);
+    }
+    else if (currentToken.type == TOKEN_KEYWORD_WHILE) {
         printf("[CMD] Reconhecido comando 'while'\n");
         advance();
 
+        char* labelInicio = novaLabel();  // LABEL L1 (início da condição)
+        char* labelCorpo  = novaLabel();  // LABEL L2 (corpo do while)
+        char* labelFim    = novaLabel();  // LABEL L3 (fim do while)
+
+        gerarLabel(labelInicio); // L1
+
         parseEat(TOKEN_LPAREN);
-        parseExpr();
+
+        // Parte da condição: expr op expr
+        char* esq = parseExprSimp();   // A
+        char op[4];                    // >
+        strcpy(op, currentToken.lexeme);
+        advance();                     // consome operador
+        char* dir = parseExprSimp();   // B
+
         parseEat(TOKEN_RPAREN);
 
-        parseCmd();
+        // === Geração com SUB + GOTRUE ===
+        gerarLoad(esq);
+        gerarLoad(dir);
+        gerarSub();
+
+        if (strcmp(op, ">") == 0 || strcmp(op, "!=") == 0) {
+            gerarGotoTrue(labelCorpo);   // se for verdade, entra no corpo
+            gerarGoto(labelFim);         // senão, pula pro fim
+        } else if (strcmp(op, "<") == 0 || strcmp(op, "==") == 0) {
+            gerarGotoFalse(labelCorpo);  // se for verdade, entra no corpo
+            gerarGoto(labelFim);         // senão, pula pro fim
+        } else if (strcmp(op, ">=") == 0) {
+            // resultado >= 0 <==> resultado < 0 é falso
+            gerarGotoFalse(labelFim);   // se resultado < 0 pula para o fim
+            gerarGoto(labelCorpo);      // senão entra no corpo
+        } else if (strcmp(op, "<=") == 0) {
+            // resultado <= 0 <==> resultado > 0 é falso
+            gerarGotoTrue(labelFim);    // se resultado > 0 pula para o fim
+            gerarGoto(labelCorpo);      // senão entra no corpo
+        } else {
+            // operador desconhecido - erro
+            fprintf(stderr, "[ERRO] Operador relacional desconhecido: %s\n", op);
+            exit(1);
+        }
+
+        gerarLabel(labelCorpo);       // L2
+        parseCmd();                   // comandos do corpo
+        gerarGoto(labelInicio);       // volta para reavaliar
+
+        gerarLabel(labelFim);         // L3
+
+        // Limpeza
+        free(esq);
+        free(dir);
+        free(labelInicio);
+        free(labelCorpo);
+        free(labelFim);
 
     } else if (currentToken.type == TOKEN_KEYWORD_FOR) {
         printf("[CMD] Reconhecido comando 'for'\n");
@@ -446,11 +538,13 @@ void parseCmd() {
         if (currentToken.type != TOKEN_SEMICOLON) {
             parseExpr();
 
-            // ⚠️ Aqui: return com valor
+            const char* resultado = getUltimoResultado();
+
             verificarReturnComValor();
+            gerarRetorno(resultado);
         } else {
-            // ⚠️ Aqui: return vazio
             verificarReturnSemValor();
+            gerarRetorno(NULL);
         }
 
         parseEat(TOKEN_SEMICOLON);
@@ -478,10 +572,8 @@ void parseCmd() {
             return;
 
         } else if (lookahead.type == TOKEN_LPAREN) {
-            // chamada de função como comando
             printf("[CMD] Chamada de função reconhecida: %s\n", currentToken.lexeme);
 
-            // ⚠️ VERIFICAÇÃO SEMÂNTICA AQUI
             verificarUsoDeFuncaoComoComando(currentToken.lexeme);
 
             advance(); // consome id
@@ -511,47 +603,56 @@ void parseCmd() {
 
 // atrib ::= id [ '[' expr ']' ] = expr
 void parseAtrib() {
+
     if (currentToken.type != TOKEN_ID) {
         parseError("Esperado identificador no início da atribuição");
         return;
     }
 
-    // ✅ Verificação semântica
-    verificarVariavelDeclarada(currentToken.lexeme);
-    iniciarAtribuicao(currentToken.lexeme);  
+    char nomeVar[128];  // ou MAX_TOKEN_LEN, se definido
+    strcpy(nomeVar, currentToken.lexeme);
+    verificarVariavelDeclarada(nomeVar);
+    iniciarAtribuicao(nomeVar);
 
-    printf("[ATRIB] Início de atribuição: %s\n", currentToken.lexeme);
-    advance();  // consome o id
+    advance();  // consome id
 
-    // Verifica se é uma atribuição em vetor
+    bool isVetor = false;
+    char* tempIndex = NULL;
+
     if (currentToken.type == TOKEN_LBRACK) {
-        printf("[ATRIB] Índice de vetor detectado\n");
+        isVetor = true;
         advance();  // consome '['
-        parseExpr();
-        parseEat(TOKEN_RBRACK);  // consome ']'
+        tempIndex = parseExpr();  // índice do vetor
+        parseEat(TOKEN_RBRACK);
     }
 
-    parseEat(TOKEN_ASSIGN);  // consome '='
-    parseExpr();          // processa o lado direito da atribuição
+    parseEat(TOKEN_ASSIGN);
 
-    verificarTipoExpr();  // ou "float", "char"... (temporário, depende do teste!)
+    char* tempValor = parseExpr();  // valor a ser atribuído
+    verificarTipoExpr();
+
+    if (isVetor) {
+        gerarComando("STORE %s[%s] %s", nomeVar, tempIndex, tempValor);
+    }
 
     printf("[ATRIB] Atribuição completa reconhecida\n");
 }
 
 // expr ::= expr_simp [ op_rel  expr_simp ] 
-void parseExpr() {
-    parseExprSimp();
+char* parseExpr() {
 
-    const char* tipoAntesOperadorRel = getTipoExpressao();  // <-- O ESQUERDO 
+    char* tempEsq = parseExprSimp();
+
+    const char* tipoAntesOperadorRel = getTipoExpressao();
 
     if (currentToken.type == TOKEN_EQ || currentToken.type == TOKEN_NEQ ||
         currentToken.type == TOKEN_LT || currentToken.type == TOKEN_GT ||
         currentToken.type == TOKEN_LEQ || currentToken.type == TOKEN_GEQ) {
         
-        advance(); // consome o operador relacional
+        int operador = currentToken.type;
+        advance();
 
-        parseExprSimp();  // <-- O DIREITO 
+        char* tempDir = parseExprSimp(); // também tem que retornar temp
 
         const char* tipoDepoisOperadorRel = getTipoExpressao();
 
@@ -560,67 +661,105 @@ void parseExpr() {
             fprintf(stderr, "[ERRO SEMÂNTICO] Operadores relacionais requerem operandos do tipo int ou char (não bool)\n");
             setTipoExpressao("erro");
         } else {
-            registrarTipoRelacional(); // resultado será bool
+            registrarTipoRelacional();
         }
 
+        const char* opStr = NULL;
+        switch (operador) {
+            case TOKEN_EQ:  opStr = "=="; break;
+            case TOKEN_NEQ: opStr = "!="; break;
+            case TOKEN_LT:  opStr = "<";  break;
+            case TOKEN_GT:  opStr = ">";  break;
+            case TOKEN_LEQ: opStr = "<="; break;
+            case TOKEN_GEQ: opStr = ">="; break;
+        }
+
+        if (opStr == NULL) {
+            fprintf(stderr, "[ERRO] Operador relacional inválido!\n");
+        }
+
+        char* tempResult = novoTemporario();
+
+        gerarComparacaoRelacional(opStr, tempEsq, tempDir, tempResult);
+
+        setUltimoResultado(tempResult);
+        return tempResult;
     }
 
-    printf("[EXPR] Expressão reconhecida (expr)\n");
+    setUltimoResultado(tempEsq);
+    return tempEsq;
 }
 
 // expr_simp ::= [+ | – ] termo {(+ | – | ||) termo} 
-void parseExprSimp() {
+char* parseExprSimp() {
+
     if (currentToken.type == TOKEN_PLUS || currentToken.type == TOKEN_MINUS) {
-        advance(); // consome operador unário
+
+        advance(); // operador unário
     }
 
-    parseTermo();
+    char* tempEsq = parseTermo();
     const char* tipoAnterior = getTipoExpressao();
 
     while (currentToken.type == TOKEN_PLUS || 
            currentToken.type == TOKEN_MINUS || 
            currentToken.type == TOKEN_OR) {
         
-        int operador = currentToken.type;  // salva operador atual
-        advance(); // consome operador
+        int operador = currentToken.type;
+        const char* opStr = (operador == TOKEN_PLUS) ? "+" :
+                            (operador == TOKEN_MINUS) ? "-" : "||";
 
-        parseTermo();
+        advance();
+
+        char* tempDir = parseTermo();
+        const char* tipoDir = getTipoExpressao();
 
         if (operador == TOKEN_OR) {
-            if (strcmp(tipoAnterior, "bool") != 0 || strcmp(getTipoExpressao(), "bool") != 0) {
-                fprintf(stderr, "[ERRO SEMÂNTICO] Operador || requer operandos do tipo bool\n");
-                setTipoExpressao("erro");  // <<< ESSENCIAL: marca erro para impedir propagação
+            if (strcmp(tipoAnterior, "bool") != 0 || strcmp(tipoDir, "bool") != 0) {
+                fprintf(stderr, "[ERRO SEMÂNTICO] Operador || requer bool\n");
+                setTipoExpressao("erro");
             } else {
-                registrarTipoLogico();  // resultado será bool
+                registrarTipoLogico();
             }
         } else {
-            setTipoExpressao(tipoDominanteAritmetico(tipoAnterior, getTipoExpressao()));
+            const char* tipoDominante = tipoDominanteAritmetico(tipoAnterior, tipoDir);
+            setTipoExpressao(tipoDominante);
         }
 
-        tipoAnterior = getTipoExpressao(); // atualiza para próxima iteração
+        char* tempResult = novoTemporario();
+        printf("[CODEGEN] %s = %s %s %s\n", tempResult, tempEsq, opStr, tempDir);
+        gerarComando("%s = %s %s %s", tempResult, tempEsq, opStr, tempDir);
+
+        tempEsq = tempResult;
+        tipoAnterior = getTipoExpressao(); // atualiza para o próximo laço
     }
 
-    printf("[EXPR] Expressão reconhecida (expr_simp)\n");
+    return tempEsq;
 }
 
 // termo ::= fator {(* | / | &&)  fator} 
-void parseTermo() {
-    parseFator();
-    const char* tipoAnterior = getTipoExpressao();  
+char* parseTermo() {
+
+    char* tempEsq = parseFator();
+
+    const char* tipoAnterior = getTipoExpressao();
 
     while (currentToken.type == TOKEN_MUL || 
            currentToken.type == TOKEN_DIV || 
            currentToken.type == TOKEN_AND) {
         
         int operador = currentToken.type;
-        advance(); // consome operador
-        parseFator();
+  
+        advance();
+
+        char* tempDir = parseFator();
+
         const char* tipoAtual = getTipoExpressao();
 
         if (operador == TOKEN_AND) {
             if (strcmp(tipoAnterior, "bool") != 0 || strcmp(tipoAtual, "bool") != 0) {
-                fprintf(stderr, "[ERRO SEMÂNTICO] Operador && requer operandos do tipo bool\n");
-                setTipoExpressao("erro");  // <<< ESSENCIAL: impede atribuição com tipo errado
+                fprintf(stderr, "[ERRO SEMÂNTICO] Operador && requer bool\n");
+                setTipoExpressao("erro");
             } else {
                 registrarTipoLogico();
             }
@@ -628,76 +767,89 @@ void parseTermo() {
             setTipoExpressao(tipoDominanteAritmetico(tipoAnterior, tipoAtual));
         }
 
-        tipoAnterior = getTipoExpressao();  // atualiza
+        char* tempResult = novoTemporario();
+        const char* opStr = (operador == TOKEN_MUL) ? "*" :
+                            (operador == TOKEN_DIV) ? "/" : "&&";
+
+        gerarComando("%s = %s %s %s", tempResult, tempEsq, opStr, tempDir);
+        tempEsq = tempResult;
+        tipoAnterior = getTipoExpressao();  // Atualiza tipoAnterior para próximo loop
     }
 
-    printf("[EXPR] Expressão reconhecida (termo)\n");
+    return tempEsq;
 }
 
 // fator ::= id[...] | constantes | chamada | (!fator)
-void parseFator() {
+char* parseFator() {
+
     if (currentToken.type == TOKEN_ID) {
-        Token idToken = currentToken;
+        Token id = currentToken;
         advance();
 
-        if (currentToken.type == TOKEN_LBRACK) {
-            // Uso como vetor
-            verificarVariavelDeclarada(idToken.lexeme);
-            analisarTokenAtual(idToken);  // <- AQUI: registra tipo do vetor
+        if (currentToken.type == TOKEN_LPAREN) {
             advance();
-            parseExpr();
-            parseEat(TOKEN_RBRACK);
-
-        } else if (currentToken.type == TOKEN_LPAREN) {
-            // Uso como função
-            verificarUsoDeFuncaoEmExpressao(idToken.lexeme);
-            advance();
+            char* args[10];
+            int qtdArgs = 0;
 
             if (currentToken.type != TOKEN_RPAREN) {
-                parseExpr();
+                args[qtdArgs++] = parseExpr();
                 while (currentToken.type == TOKEN_COMMA) {
                     advance();
-                    parseExpr();
+                    args[qtdArgs++] = parseExpr();
                 }
             }
 
             parseEat(TOKEN_RPAREN);
 
+            char* tempResult = novoTemporario();
+            gerarChamadaFuncao(tempResult, id.lexeme, args, qtdArgs);
+            setTipoExpressao("int"); // ou tipo real
+            return tempResult;
+
         } else {
-            // Uso como variável simples
-            verificarVariavelDeclarada(idToken.lexeme);
-            analisarTokenAtual(idToken);  // <- AQUI: registra tipo do id simples
+            verificarVariavelDeclarada(id.lexeme);
+            char* temp = novoTemporario();
+            gerarComando("%s = %s", temp, id.lexeme);
+            setTipoExpressao("int"); // ou tipo real
+            return temp;
         }
 
-        printf("[EXPR] Fator reconhecido: %s\n", idToken.lexeme);
-    }
-    else if (currentToken.type == TOKEN_INTCON || 
-             currentToken.type == TOKEN_REALCON ||
-             currentToken.type == TOKEN_CHARCON || 
-             currentToken.type == TOKEN_CHARCON_N ||
-             currentToken.type == TOKEN_CHARCON_0 ||
-             currentToken.type == TOKEN_BOOLCON) {
-        printf("[EXPR] Constante reconhecida: %s\n", currentToken.lexeme);
-        registrarTipoConstante(currentToken);
-        advance();
-    }
-    else if (currentToken.type == TOKEN_LPAREN) {
-        advance();
-        parseExpr();
-        parseEat(TOKEN_RPAREN);
-    }
-    else if (currentToken.type == TOKEN_NOT) {
-        advance();
-        parseFator();
-        if (strcmp(getTipoExpressao(), "bool") != 0) {
-            fprintf(stderr, "[ERRO SEMÂNTICO] Operador ! requer operando do tipo bool\n");
-            setTipoExpressao("erro");
-        } else {
-            registrarTipoLogico();  // só registra se for bool de verdade
+    } else if (currentToken.type == TOKEN_INTCON) {
+
+        char* temp = novoTemporario();
+
+        if (!temp || strlen(currentToken.lexeme) == 0) {
+            printf("[ERRO] Ponteiro NULL detectado!\n");
+            exit(1);
         }
-    }
-    else {
+
+        if (currentToken.lexeme[0] == '\0') {
+            fprintf(stderr, "[ERRO] Lexema vazio detectado (token malformado)\n");
+            exit(1);
+        }
+
+        gerarComando("%s = %s", temp, currentToken.lexeme);
+
+        setTipoExpressao("int");
+        advance();
+        return temp;
+
+    } else if (currentToken.type == TOKEN_CHARCON) {
+        char* temp = novoTemporario();
+        gerarComando("%s = '%s'", temp, currentToken.lexeme);
+        setTipoExpressao("char");
+        advance();
+        return temp;
+
+    } else if (currentToken.type == TOKEN_LPAREN) {
+        advance();
+        char* temp = parseExpr();
+        parseEat(TOKEN_RPAREN);
+        return temp;
+
+    } else {
         parseError("Fator inválido");
+        return NULL;
     }
 }
 
@@ -887,4 +1039,3 @@ void obterTipoString(char* dest) {
         default: strcpy(dest, "???"); break;
     }
 }
-

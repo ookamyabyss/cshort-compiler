@@ -1,12 +1,15 @@
 
 int main() {
+    int x;
 
-    while (3 > 2) {} 
-    while (3 < 2) {}
-    while (3 >= 2) {}
-    while (3 <= 2) {} 
-    while (3 == 2) {}
-    while (3 != 2) {} 
+    x = 1 + 2;
+
+    x = 1 * 2;
+
+    x = 1 / 2;
+
+    x = 1 - 2;
+
 
     return 0;
 }

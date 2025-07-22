@@ -59,4 +59,33 @@ LABEL L3:            // fim do while
 */
 
 
+/*
+================================================================================
+Esquema de Tradução para comando for no compilador Cshort
 
+Exemplo em C:
+
+    for (inicialização; condição; incremento) {
+        comandos_do_corpo;
+    }
+
+Tradução gerada:
+
+    ...                 // tradução da inicialização
+
+LABEL L1:               // início do teste da condição (loop)
+    ...                 // tradução da condição
+    GOTRUE L2           // se condição verdadeira, vai para o corpo do loop
+
+    GOTO L3             // senão, sai do loop (fim)
+
+LABEL L2:               // início do corpo do for
+    ...                 // comandos_do_corpo
+
+    ...                 // tradução do incremento
+
+    GOTO L1             // volta para testar condição novamente
+
+LABEL L3:               // fim do for
+================================================================================
+*/

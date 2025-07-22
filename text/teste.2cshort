@@ -1,0 +1,14 @@
+// Protótipos (funções rascunho): declaração da função soma com seus parâmetros
+int soma(int a, int b);
+
+// Definição completa da função soma: implementação do corpo da função
+int soma(int a, int b) {
+    return a + b;  // Retorna a soma dos dois parâmetros
+}
+
+// Função principal: ponto de entrada do programa
+int main() {
+    int resultado;               // Declara variável para armazenar o resultado
+    resultado = soma(10, 20);   // Chama a função soma e armazena o retorno em resultado
+    return 0;                   // Indica que o programa terminou corretamente
+}

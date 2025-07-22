@@ -1,0 +1,57 @@
+// Declarações globais de variáveis simples
+int g1;        // variável global do tipo int
+char g2;       // variável global do tipo char
+float g3;      // variável global do tipo float
+bool g4;       // variável global do tipo bool
+
+// Declarações globais de arrays
+int vet1[10];  // array global de int com 10 elementos
+char vet2[5];  // array global de char com 5 elementos
+
+int main() {
+    // Declarações locais de variáveis simples
+    int x;
+    char y;
+    float z;
+    bool w;
+
+    // Declarações locais de arrays
+    int arr1[3];
+    char arr2[2];
+
+    // Atribuições simples com valores constantes
+    x = 10;
+    y = 'A';
+    z = 3.14;
+    w = true;
+
+    // Atribuições em arrays
+    arr1[0] = 5;
+    arr2[1] = 'B';
+
+    // Testes de compatibilidade de tipos
+
+    // ✅ int com int (compatível)
+    x = 1;
+
+    // ✅ char com char (compatível)
+    y = 'a';
+
+    // ✅ int com char (char pode ser promovido a int)
+    x = y;
+
+    // ✅ char com int (int pode ser convertido para char)
+    y = x;
+
+    // ✅ int[] com int[] (acesso individual, compatível)
+    arr1[0] = x;
+
+    // ✅ char[] com char[] (acesso individual, compatível)
+    arr2[1] = y;
+
+    // ✅ Expressões relacionais resultam em bool, que é compatível com int
+    w = x > 5;
+    x = (3 <= 4);
+
+    return 0;
+}

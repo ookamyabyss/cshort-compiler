@@ -691,11 +691,14 @@ char* parseExpr() {
 }
 
 // expr_simp ::= [+ | – ] termo {(+ | – | ||) termo} 
+
+// termo ::= fator {(* | / | &&)  fator} 
+
 char* parseExprSimp() {
-
+    // Tratamento de operador unário + ou - (ignorado no momento)
     if (currentToken.type == TOKEN_PLUS || currentToken.type == TOKEN_MINUS) {
-
         advance(); // operador unário
+        // opcional: implementar comportamento unário aqui
     }
 
     char* tempEsq = parseTermo();
@@ -706,29 +709,41 @@ char* parseExprSimp() {
            currentToken.type == TOKEN_OR) {
         
         int operador = currentToken.type;
-        const char* opStr = (operador == TOKEN_PLUS) ? "+" :
-                            (operador == TOKEN_MINUS) ? "-" : "||";
-
         advance();
 
         char* tempDir = parseTermo();
         const char* tipoDir = getTipoExpressao();
 
         if (operador == TOKEN_OR) {
+            // Operação lógica OR, só gera comando simples
             if (strcmp(tipoAnterior, "bool") != 0 || strcmp(tipoDir, "bool") != 0) {
                 fprintf(stderr, "[ERRO SEMÂNTICO] Operador || requer bool\n");
                 setTipoExpressao("erro");
             } else {
                 registrarTipoLogico();
             }
+            // Código simplificado para OR (pode ser adaptado)
+            gerarLoad(tempEsq);
+            gerarLoad(tempDir);
+            gerarComando("OR");
         } else {
+            // Operação aritmética soma ou subtração
             const char* tipoDominante = tipoDominanteAritmetico(tipoAnterior, tipoDir);
             setTipoExpressao(tipoDominante);
+
+            // Geração do código no formato LOAD SOMA SUB
+            gerarLoad(tempEsq);
+            gerarLoad(tempDir);
+
+            if (operador == TOKEN_PLUS) {
+                gerarComando("SOMA");  // comando customizado para +
+            } else { // TOKEN_MINUS
+                gerarComando("SUB");   // comando customizado para -
+            }
         }
 
         char* tempResult = novoTemporario();
-        printf("[CODEGEN] %s = %s %s %s\n", tempResult, tempEsq, opStr, tempDir);
-        gerarComando("%s = %s %s %s", tempResult, tempEsq, opStr, tempDir);
+        gerarStore(tempResult);
 
         tempEsq = tempResult;
         tipoAnterior = getTipoExpressao(); // atualiza para o próximo laço
@@ -737,11 +752,8 @@ char* parseExprSimp() {
     return tempEsq;
 }
 
-// termo ::= fator {(* | / | &&)  fator} 
 char* parseTermo() {
-
     char* tempEsq = parseFator();
-
     const char* tipoAnterior = getTipoExpressao();
 
     while (currentToken.type == TOKEN_MUL || 
@@ -749,11 +761,9 @@ char* parseTermo() {
            currentToken.type == TOKEN_AND) {
         
         int operador = currentToken.type;
-  
         advance();
 
         char* tempDir = parseFator();
-
         const char* tipoAtual = getTipoExpressao();
 
         if (operador == TOKEN_AND) {
@@ -763,15 +773,26 @@ char* parseTermo() {
             } else {
                 registrarTipoLogico();
             }
+            gerarLoad(tempEsq);
+            gerarLoad(tempDir);
+            gerarComando("AND");
         } else {
             setTipoExpressao(tipoDominanteAritmetico(tipoAnterior, tipoAtual));
+
+            // Geração do código no formato LOAD MULT DIV
+            gerarLoad(tempEsq);
+            gerarLoad(tempDir);
+
+            if (operador == TOKEN_MUL) {
+                gerarComando("MULT");
+            } else { // TOKEN_DIV
+                gerarComando("DIV");
+            }
         }
 
         char* tempResult = novoTemporario();
-        const char* opStr = (operador == TOKEN_MUL) ? "*" :
-                            (operador == TOKEN_DIV) ? "/" : "&&";
+        gerarStore(tempResult);
 
-        gerarComando("%s = %s %s %s", tempResult, tempEsq, opStr, tempDir);
         tempEsq = tempResult;
         tipoAnterior = getTipoExpressao();  // Atualiza tipoAnterior para próximo loop
     }
@@ -840,7 +861,19 @@ char* parseFator() {
         setTipoExpressao("char");
         advance();
         return temp;
+    } else if (currentToken.type == TOKEN_REALCON) {
+        char* temp = novoTemporario();
+        gerarComando("%s = %s", temp, currentToken.lexeme);
+        setTipoExpressao("float");
+        advance();
+        return temp;
 
+    } else if (currentToken.type == TOKEN_BOOLCON) {
+        char* temp = novoTemporario();
+        gerarComando("%s = %s", temp, currentToken.lexeme);
+        setTipoExpressao("bool");
+        advance();
+        return temp;
     } else if (currentToken.type == TOKEN_LPAREN) {
         advance();
         char* temp = parseExpr();

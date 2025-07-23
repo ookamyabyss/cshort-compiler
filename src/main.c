@@ -8,9 +8,10 @@
 #include "codegen.h"  
 
 
-// Função principal: entrada do compilador
+// Função principal: ponto de entrada do compilador
+
 int main(int argc, char* argv[]) {
-    // Verifica se o nome do arquivo-fonte foi fornecido como argumento
+    // Verifica se o programa recebeu exatamente um argumento (nome do arquivo-fonte)
     if (argc != 2) {
         fprintf(stderr, "Uso: %s <arquivo-fonte>\n", argv[0]);
         return 1;

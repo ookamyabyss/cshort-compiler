@@ -20,6 +20,8 @@ static const char* tipoExpressao = NULL;
 // Escopo atual de análise (global ou local)
 extern Escopo escopoAtual;
 
+static char ultimoTipoExpr[16] = "";
+
 // ==============================================
 // INTERFACE DO ANALISADOR SEMÂNTICO - C.SHORT
 // ==============================================
@@ -40,18 +42,16 @@ void verificarSemantica() {
 }
 
 // ----------------------------------------------
-// 1. Declaração e uso de variáveis
-// ----------------------------------------------
 
-// Verifica se uma variável (ou vetor) foi previamente declarada
+// Verifica se uma variável (ou vetor) foi previamente declarada em algum escopo válido
 void verificarVariavelDeclarada(const char* nome) {
-    Simbolo* s = buscarSimboloEmEscopos(nome); // <- agora passando escopo
+    Simbolo* s = buscarSimboloEmEscopos(nome); // busca na tabela respeitando escopo
     if (s == NULL) {
         erroSemantico("Variável não declarada", nome);
     }
 }
 
-// Verifica se identificador já foi declarado no mesmo escopo
+// Verifica se um identificador já foi declarado no escopo atual para evitar redeclaração
 void verificarRedeclaracao(const char* nome) {
     Simbolo* existente = buscarSimbolo(nome, escopoAtual);
 
@@ -69,7 +69,7 @@ void verificarRedeclaracao(const char* nome) {
     }
 }
 
-// Inicia verificação de atribuição (armazenando o tipo da variável à esquerda)
+// Inicia a verificação de uma atribuição armazenando o tipo da variável à esquerda da atribuição
 void iniciarAtribuicao(const char* nome) {
     Simbolo* s = buscarSimboloEmEscopos(nome);
     if (s == NULL) {
@@ -82,28 +82,34 @@ void iniciarAtribuicao(const char* nome) {
 
     garantirTipoDefinido(s->tipo, s->nome);
 
-    tipoAtribuido = s->tipo;
-    tipoExpressao = NULL; 
+    tipoAtribuido = s->tipo;    // guarda tipo da variável para verificar compatibilidade depois
+    tipoExpressao = NULL;       // limpa tipo da expressão (ainda não avaliada)
 }
 
-// Registra o tipo da expressão analisada (lado direito da atribuição)
+// Armazena o tipo da expressão que está sendo analisada (lado direito da atribuição)
 void registrarTipoExpressao(const char* tipo) {
     if (tipo == NULL) {
-        tipoExpressao = "desconhecido";  // ← ou apenas retorne sem registrar
+        tipoExpressao = "desconhecido";  // Tipo inválido ou não reconhecido
         return;
     }
-    tipoExpressao = tipo;
+    tipoExpressao = tipo;  // Guarda o tipo da expressão atual
 }
 
 // Verifica se tipos na atribuição (esquerda e direita) são compatíveis
 void verificarTipoExpr() {
+    // Se algum dos lados não tiver tipo definido, não faz verificação
     if (tipoAtribuido == NULL || tipoExpressao == NULL) return;
 
+    // Usa função auxiliar para verificar compatibilidade entre os dois tipos
     if (!tiposSaoCompatíveis(tipoAtribuido, tipoExpressao)) {
         char msg[128];
+
+        // Prepara mensagem de erro detalhada com os tipos envolvidos
         snprintf(msg, sizeof(msg),
             "Tipo incompatível na atribuição: esperado '%s', mas recebeu '%s'",
             tipoAtribuido, tipoExpressao);
+
+        // Gera erro semântico
         erroSemantico(msg, "");
     }
 }
@@ -133,39 +139,38 @@ void registrarTipoConstante(Token token) {
     }
 }
 
-// Analisa token atual e registra tipo, se aplicável (constantes ou identificadores)
+// Analisa o token atual da expressão, e registra seu tipo se aplicável
 void analisarTokenAtual(Token token) {
-    // Constante literal? Registra o tipo normalmente
+    // Se for constante literal, determina tipo diretamente
     registrarTipoConstante(token);
 
-    // Identificador? Pode ser variável OU função chamada numa expressão
+    // Se for identificador (nome de variável ou função), precisa buscar na tabela de símbolos
     if (token.type == TOKEN_ID) {
         Simbolo* s = buscarSimboloEmEscopos(token.lexeme);
 
+        // Se o identificador não foi declarado, gera erro semântico
         if (s == NULL) {
             erroSemantico("Identificador usado mas não declarado", token.lexeme);
         }
 
+        // Garante que o tipo da variável está definido corretamente
         garantirTipoDefinido(s->tipo, s->nome);
 
-        // Se for vetor (tipo termina com "[]"), registrar tipo base
+        // Se for vetor (tipo termina com "[]"), remove "[]" e registra o tipo base
         if (strstr(s->tipo, "[]") != NULL) {
             char tipoBase[10];
             strncpy(tipoBase, s->tipo, strlen(s->tipo) - 2);
             tipoBase[strlen(s->tipo) - 2] = '\0';
             registrarTipoExpressao(tipoBase);
         } else {
+            // Caso contrário, registra o tipo diretamente
             registrarTipoExpressao(s->tipo);
         }
         
     }
 }
 
-// ----------------------------------------------
-// 2. Funções - declarações e uso
-// ----------------------------------------------
-
-// Verifica se identificador chamado é uma função válida
+// Verifica se um identificador está sendo chamado corretamente como função.
 void registrarChamadaDeFuncao(const char* nome) {
     Simbolo* s = buscarSimboloEmEscopos(nome);
     if (s == NULL) {
@@ -362,14 +367,17 @@ void verificarFuncaoComRetornoObrigatorio() {
     }
 }
 
+// Define o tipo da expressão atual como "bool" após uma operação relacional,
 void registrarTipoRelacional() {
     registrarTipoExpressao("bool");
 }
 
+// Define o tipo da expressão atual como "bool" após uma operação lógica,
 void registrarTipoLogico() {
     registrarTipoExpressao("bool");
 }
 
+// Determina o tipo resultante de uma operação aritmética entre dois operandos (t1 e t2)
 const char* tipoDominanteAritmetico(const char* t1, const char* t2) {
     // Se algum dos dois for vetor, não é permitido
     if (tipoEhVetor(t1) || tipoEhVetor(t2)) {
@@ -395,28 +403,36 @@ const char* tipoDominanteAritmetico(const char* t1, const char* t2) {
     return "char";
 }
 
+// Retorna o tipo atualmente registrado para a expressão que está sendo analisada
 const char* getTipoExpressao() {
     return tipoExpressao;
 }
 
+// Define o tipo da expressão atual, usado durante análise semântica para
+// verificar compatibilidade de tipos em atribuições e operações
 void setTipoExpressao(const char* tipo) {
     tipoExpressao = tipo;
 }
 
+// Verifica se o tipo fornecido representa um vetor
+// Retorna true se a string do tipo contiver "[]"
 bool tipoEhVetor(const char* tipo) {
     return strstr(tipo, "[]") != NULL;
 }
 
-static char ultimoTipoExpr[16] = "";
-
+// Salva o tipo da última expressão avaliada, geralmente usado para
+// manter contexto em verificações posteriores
 void setUltimoTipoExpr(const char* tipo) {
     strncpy(ultimoTipoExpr, tipo, sizeof(ultimoTipoExpr));
 }
 
+// Retorna o tipo da última expressão armazenada por setUltimoTipoExpr()
 const char* getUltimoTipoExpr() {
     return ultimoTipoExpr;
 }
 
+// Verifica se o tipo fornecido é numérico (int, char ou float)
+// Usado para validar operações aritméticas
 bool tipoEhNumerico(const char* tipo) {
     return strcmp(tipo, "int") == 0 || strcmp(tipo, "char") == 0 || strcmp(tipo, "float") == 0;
 }

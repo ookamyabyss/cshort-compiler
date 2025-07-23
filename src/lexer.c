@@ -21,11 +21,13 @@ static int lastChar = ' ';
 // Lista de palavras-chave reconhecidas pela linguagem
 #define MAX_KEYWORDS 16
 
+// Lista estática de palavras-chave da linguagem reconhecidas pelo lexer/parsers
 const char* keywords[] = {
     "if", "else", "while", "for", "return",
     "int", "float", "char", "void", "bool"
 };
 
+// Função que retorna uma string representando o nome textual do tipo do token recebido
 const char* tokenTypeName(TokenType type) {
     switch (type) {
         case TOKEN_ID: return "id";
